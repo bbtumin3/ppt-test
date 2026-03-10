@@ -3,326 +3,1089 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PPT 智能批量填字</title>
-    <!-- 引入核心依赖库（纯前端，无需后端） -->
-    <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/ppt-parser@1.2.0/dist/ppt-parser.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.0/dist/tesseract.min.js"></script>
+    <title>PPT 智能批量填字工具</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            max-width: 750px;
-            margin: 0 auto;
-            padding: 25px 15px;
-            line-height: 1.5;
-            color: #222;
-            background-color: #fff;
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: #f0f2f8;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
         }
-        h1 {
-            font-size: 22px;
-            font-weight: 600;
-            margin-bottom: 30px;
+
+        header {
+            background: #fff;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+            box-shadow: 0 1px 4px rgba(0,0,0,.06);
         }
-        .module {
-            margin-bottom: 32px;
-            padding: 18px;
-            border: 1px solid #f0f0f0;
-            border-radius: 8px;
-        }
-        .module h2 {
+        .logo { display: flex; align-items: center; gap: 10px; }
+        .logo-icon {
+            width: 36px; height: 36px;
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
             font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 15px;
         }
-        .file-input {
-            width: 100%;
-            padding: 12px;
-            margin: 10px 0;
-            border: 1px dashed #ccc;
-            border-radius: 6px;
-            cursor: pointer;
-            background-color: #fafafa;
+        .logo-title { font-size: 17px; font-weight: 800; color: #1e1b4b; }
+
+        .ocr-badge {
+            display: flex; align-items: center; gap: 6px;
+            font-size: 12px; font-weight: 600;
+            padding: 5px 12px; border-radius: 20px;
+            background: #f1f5f9; color: #64748b;
+            border: 1px solid #e2e8f0;
+            transition: all .3s;
         }
-        .tip {
-            font-size: 14px;
-            color: #666;
-            margin: 6px 0;
+        .ocr-badge.ready { background: #d1fae5; color: #065f46; border-color: #6ee7b7; }
+        .ocr-badge.loading { background: #fef3c7; color: #92400e; border-color: #fde68a; }
+        .ocr-badge.failed { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
+        .dot { width: 8px; height: 8px; border-radius: 50%; background: #94a3b8; }
+        .dot.ready { background: #10b981; animation: pulse 2s infinite; }
+        .dot.loading { background: #f59e0b; animation: pulse .8s infinite; }
+        .dot.failed { background: #ef4444; }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+        .layout { display: flex; flex: 1; overflow: hidden; }
+
+        .left {
+            width: 380px; flex-shrink: 0;
+            background: #fff; border-right: 1px solid #e2e8f0;
+            display: flex; flex-direction: column; overflow: hidden;
         }
-        textarea {
-            width: 100%;
-            min-height: 75px;
-            padding: 12px;
-            margin: 10px 0;
-            border: 1px solid #d0d0d0;
-            border-radius: 6px;
-            font-size: 16px;
-            resize: vertical;
-            line-height: 1.6;
+        .left-scroll {
+            flex: 1; overflow-y: auto;
+            padding: 20px;
+            display: flex; flex-direction: column; gap: 20px;
         }
-        .name-list {
-            margin: 15px 0;
-            padding: 12px;
-            border: 1px solid #f0f0f0;
-            border-radius: 6px;
-            max-height: 220px;
-            overflow-y: auto;
-            background-color: #fafafa;
+
+        .section-title {
+            font-size: 11px; font-weight: 800; letter-spacing: 1px;
+            text-transform: uppercase; color: #6366f1;
+            display: flex; align-items: center; gap: 7px; margin-bottom: 10px;
         }
-        .name-item {
-            padding: 3px 0;
-            font-size: 15px;
+        .step-badge {
+            width: 20px; height: 20px; border-radius: 5px;
+            background: #ede9fe; color: #6366f1;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 11px; font-weight: 900;
         }
-        button {
-            width: 100%;
-            padding: 13px 0;
-            background-color: #0071e3;
-            color: #fff;
-            border: none;
-            border-radius: 6px;
-            font-size: 16px;
-            font-weight: 500;
-            cursor: pointer;
+
+        .upload-zone {
+            border: 2px dashed #cbd5e1; border-radius: 12px;
+            padding: 24px 16px; text-align: center;
+            cursor: pointer; position: relative;
+            transition: all .2s; background: #fafbff;
         }
-        button:disabled {
-            background-color: #cccccc;
-            cursor: not-allowed;
+        .upload-zone:hover { border-color: #6366f1; background: #f5f3ff; }
+        .upload-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+        .upload-zone .icon { font-size: 30px; margin-bottom: 8px; }
+        .upload-zone .t1 { font-size: 13px; font-weight: 700; color: #374151; }
+        .upload-zone .t2 { font-size: 11px; color: #9ca3af; margin-top: 3px; }
+
+        .file-ok {
+            background: #ecfdf5; border: 1.5px solid #6ee7b7;
+            border-radius: 10px; padding: 10px 14px;
+            display: none; align-items: center; justify-content: space-between;
         }
-        .status {
-            font-size: 14px;
-            margin: 8px 0;
+        .file-ok .name { font-size: 12px; font-weight: 700; color: #065f46; }
+        .file-ok .sub { font-size: 11px; color: #34d399; }
+        .file-ok button {
+            font-size: 11px; font-weight: 700; color: #059669;
+            background: none; border: 1px solid #34d399;
+            border-radius: 6px; padding: 3px 9px; cursor: pointer;
         }
-        .status-success {
-            color: #0071e3;
+
+        .input-wrap {
+            border: 1.5px solid #e2e8f0; border-radius: 12px; overflow: hidden;
+            transition: border-color .2s;
         }
-        .status-error {
-            color: #ff3b30;
+        .input-wrap:focus-within { border-color: #6366f1; }
+        .list-textarea {
+            width: 100%; height: 120px; padding: 12px;
+            border: none; outline: none; resize: none;
+            font-size: 13px; line-height: 1.7; color: #374151;
+            font-family: inherit; background: #fafbff;
+        }
+        .input-footer {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 8px 12px; border-top: 1px solid #e2e8f0; background: #f8fafc;
+        }
+        .line-badge {
+            font-size: 11px; font-weight: 700;
+            background: #ede9fe; color: #6366f1; border-radius: 5px; padding: 2px 8px;
+        }
+        .ocr-btn {
+            display: flex; align-items: center; gap: 5px;
+            font-size: 11px; font-weight: 700; color: #4f46e5;
+            background: #ede9fe; border: none; border-radius: 7px;
+            padding: 5px 10px; cursor: pointer; font-family: inherit;
+            transition: opacity .2s;
+        }
+        .ocr-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+        .blessing-ta {
+            width: 100%; height: 78px; padding: 12px;
+            border: 1.5px solid #e2e8f0; border-radius: 12px;
+            font-size: 13px; line-height: 1.7; color: #374151;
+            outline: none; resize: none; font-family: inherit;
+            transition: border-color .2s; background: #fafbff;
+        }
+        .blessing-ta:focus { border-color: #6366f1; }
+        .hint { font-size: 11px; color: #9ca3af; margin-top: 5px; }
+        .hint b { color: #6366f1; }
+
+        .toggle-row {
+            display: flex; align-items: center; justify-content: space-between;
+            border: 1.5px solid #e2e8f0; border-radius: 10px;
+            padding: 10px 14px; background: #fafbff; margin-top: 8px;
+        }
+        .toggle-label { font-size: 12px; font-weight: 700; color: #374151; }
+        .toggle { position: relative; display: inline-block; width: 38px; height: 21px; }
+        .toggle input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute; cursor: pointer; inset: 0;
+            background: #cbd5e1; border-radius: 21px; transition: .2s;
+        }
+        .slider:before {
+            position: absolute; content: "";
+            height: 15px; width: 15px; left: 3px; bottom: 3px;
+            background: #fff; border-radius: 50%; transition: .2s;
+            box-shadow: 0 1px 3px rgba(0,0,0,.2);
+        }
+        .toggle input:checked + .slider { background: #4f46e5; }
+        .toggle input:checked + .slider:before { transform: translateX(17px); }
+
+        .left-bottom {
+            padding: 16px 20px;
+            border-top: 1px solid #e2e8f0; background: #f8fafc; flex-shrink: 0;
+        }
+        .gen-btn {
+            width: 100%; padding: 13px;
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            border: none; border-radius: 12px;
+            color: #fff; font-size: 14px; font-weight: 800;
+            cursor: pointer; font-family: inherit;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            transition: all .2s;
+            box-shadow: 0 4px 14px rgba(79,70,229,.35);
+        }
+        .gen-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(79,70,229,.45); }
+        .gen-btn:active { transform: none; }
+        .gen-btn:disabled { opacity: .4; cursor: not-allowed; transform: none; box-shadow: none; }
+
+        .right {
+            flex: 1; overflow-y: auto;
+            padding: 24px; background: #f0f2f8;
+        }
+
+        .preview-section { margin-bottom: 24px; }
+        .preview-label {
+            font-size: 11px; font-weight: 800; letter-spacing: 1px;
+            text-transform: uppercase; color: #94a3b8; margin-bottom: 10px;
+        }
+        .preview-box {
+            background: #e2e8f0; border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            min-height: 200px; padding: 12px; overflow: hidden;
+        }
+        #previewCanvas {
+            max-width: 100%; border-radius: 8px;
+            box-shadow: 0 4px 16px rgba(0,0,0,.15); display: none;
+        }
+        .preview-empty { text-align: center; color: #94a3b8; }
+        .preview-empty .ei { font-size: 40px; margin-bottom: 8px; }
+        .preview-empty .et { font-size: 13px; font-weight: 600; }
+
+        /* ===== 结果区头部 ===== */
+        .results-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 10px; gap: 10px; flex-wrap: wrap;
+        }
+        .results-title { font-size: 15px; font-weight: 800; color: #1e1b4b; display: flex; align-items: center; gap: 8px; }
+        .cnt-badge {
+            background: #ede9fe; color: #6366f1;
+            font-size: 12px; font-weight: 800; border-radius: 6px; padding: 2px 8px;
+        }
+        .dl-all-btn {
+            display: flex; align-items: center; gap: 6px;
+            background: #10b981; color: #fff; border: none;
+            border-radius: 9px; padding: 9px 16px;
+            font-size: 12px; font-weight: 800; cursor: pointer;
+            font-family: inherit; transition: all .15s;
+            box-shadow: 0 3px 10px rgba(16,185,129,.3);
+            white-space: nowrap;
+        }
+        .dl-all-btn:hover { background: #059669; }
+
+        /* ===== 分组复制按钮区域 ===== */
+        .group-copy-area {
+            background: #fff;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 14px;
+            padding: 14px 16px;
+            margin-bottom: 16px;
+            display: none;
+        }
+        .group-copy-title {
+            font-size: 11px; font-weight: 800; letter-spacing: 1px;
+            text-transform: uppercase; color: #6366f1;
+            display: flex; align-items: center; gap: 6px;
+            margin-bottom: 10px;
+        }
+        .group-copy-tip {
+            font-size: 11px; color: #64748b; margin-bottom: 12px; line-height: 1.6;
+        }
+        .group-copy-tip b { color: #f59e0b; }
+        .group-btns-row {
+            display: flex; flex-wrap: wrap; gap: 8px;
+        }
+        .group-copy-btn {
+            display: flex; align-items: center; gap: 6px;
+            background: linear-gradient(135deg, #f59e0b, #ef4444);
+            color: #fff; border: none;
+            border-radius: 9px; padding: 9px 14px;
+            font-size: 12px; font-weight: 800; cursor: pointer;
+            font-family: inherit; transition: all .15s;
+            box-shadow: 0 3px 10px rgba(245,158,11,.3);
+            white-space: nowrap;
+        }
+        .group-copy-btn:hover { filter: brightness(1.08); transform: translateY(-1px); }
+        .group-copy-btn:active { transform: none; }
+        .group-copy-btn.done {
+            background: linear-gradient(135deg, #059669, #10b981);
+            box-shadow: 0 3px 10px rgba(16,185,129,.3);
+        }
+        .group-copy-btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+
+        /* ===== 分组标题 ===== */
+        .group-label {
+            display: flex; align-items: center; gap: 8px;
+            margin: 20px 0 10px;
+        }
+        .group-label-text {
+            font-size: 11px; font-weight: 800; letter-spacing: 1px;
+            text-transform: uppercase; color: #94a3b8;
+        }
+        .group-label-line {
+            flex: 1; height: 1px; background: #e2e8f0;
+        }
+
+        /* ===== 卡片 ===== */
+        .card-list { display: flex; flex-direction: column; gap: 12px; }
+        .fwd-card {
+            background: #fff; border: 1.5px solid #e2e8f0;
+            border-radius: 14px; overflow: hidden;
+            display: grid; grid-template-columns: 260px 1fr;
+            box-shadow: 0 2px 8px rgba(0,0,0,.05);
+            transition: box-shadow .2s, transform .2s;
+        }
+        .fwd-card:hover { box-shadow: 0 6px 20px rgba(79,70,229,.12); transform: translateY(-1px); }
+
+        .card-img {
+            position: relative; cursor: pointer;
+            background: #f1f5f9; overflow: hidden; min-height: 140px;
+        }
+        .card-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .card-img .overlay {
+            position: absolute; inset: 0;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(79,70,229,0); transition: background .2s;
+        }
+        .card-img:hover .overlay { background: rgba(79,70,229,.35); }
+        .zoom-text {
+            color: #fff; font-size: 12px; font-weight: 800;
+            background: rgba(0,0,0,.4); padding: 5px 12px; border-radius: 20px;
+            opacity: 0; transition: opacity .2s;
+        }
+        .card-img:hover .zoom-text { opacity: 1; }
+
+        .card-text {
+            padding: 14px 16px;
+            display: flex; flex-direction: column; gap: 10px;
+            border-left: 1.5px solid #e2e8f0;
+        }
+        .card-seq { font-size: 10px; font-weight: 800; letter-spacing: 1px; color: #94a3b8; text-transform: uppercase; }
+        .blessing-box {
+            flex: 1; background: #f5f3ff; border: 1px solid #ddd6fe;
+            border-radius: 8px; padding: 10px 12px;
+            font-size: 13px; line-height: 1.7; color: #374151;
+            user-select: all; cursor: text; word-break: break-all;
+        }
+        .copy-btn {
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            border: none; border-radius: 8px; padding: 9px;
+            color: #fff; font-size: 12px; font-weight: 800;
+            cursor: pointer; font-family: inherit; transition: all .15s; width: 100%;
+        }
+        .copy-btn:hover { filter: brightness(1.1); }
+        .copy-btn.done { background: linear-gradient(135deg, #059669, #10b981); }
+
+        .modal {
+            position: fixed; inset: 0; z-index: 200;
+            background: rgba(0,0,0,.9);
+            display: none; align-items: center; justify-content: center; padding: 20px;
+        }
+        .modal.open { display: flex; }
+        .modal img { max-width: 100%; max-height: 90vh; border-radius: 10px; }
+        .modal-close {
+            position: absolute; top: 16px; right: 16px;
+            width: 36px; height: 36px; border-radius: 50%;
+            background: rgba(255,255,255,.15); border: none;
+            color: #fff; font-size: 20px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        .loader {
+            position: fixed; inset: 0; z-index: 300;
+            background: rgba(255,255,255,.75); backdrop-filter: blur(4px);
+            display: none; align-items: center; justify-content: center;
+            flex-direction: column; gap: 14px;
+        }
+        .loader.show { display: flex; }
+        .spinner {
+            width: 44px; height: 44px;
+            border: 3px solid #e2e8f0; border-top-color: #6366f1;
+            border-radius: 50%; animation: spin .8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loader-msg { font-size: 14px; font-weight: 700; color: #374151; }
+
+        #resultsSection { display: none; }
+
+        @media (max-width: 700px) {
+            .left { width: 100%; border-right: none; border-bottom: 1px solid #e2e8f0; max-height: 50vh; }
+            .layout { flex-direction: column; }
+            .fwd-card { grid-template-columns: 1fr; }
+            .card-text { border-left: none; border-top: 1.5px solid #e2e8f0; }
         }
     </style>
 </head>
 <body>
-    <h1>PPT 智能批量填字</h1>
 
-    <!-- 模块1：PPT模板导入（和原工具完全对齐） -->
-    <div class="module">
-        <h2>📂 1 PPT 模板</h2>
-        <input type="file" id="pptFile" accept=".pptx" class="file-input">
-        <p class="tip">💡 微信/QQ文件导入技巧：先在微信/QQ里把文件保存到手机，再从这里选择文件</p>
-        <p class="status" id="pptStatus">未上传PPT模板</p>
+<header>
+    <div class="logo">
+        <div class="logo-icon">📊</div>
+        <div class="logo-title">PPT 批量生成工具</div>
     </div>
+    <div style="display:flex;align-items:center;gap:10px;">
+        <div class="ocr-badge" id="ocrBadge">
+            <div class="dot" id="ocrDot"></div>
+            <span id="ocrText">OCR 待机中</span>
+        </div>
+        <button onclick="if(confirm('确认重置？'))location.reload()" style="font-size:12px;color:#9ca3af;background:none;border:none;cursor:pointer;">重置</button>
+    </div>
+</header>
 
-    <!-- 模块2：名单识别（和原工具完全对齐） -->
-    <div class="module">
-        <h2>📷 2 名单识别</h2>
-        <input type="file" id="nameImage" accept="image/*" capture="camera" class="file-input">
-        <p class="tip">拍照/上传名单图片，自动识别生成名单</p>
-        <p class="status" id="ocrStatus">未识别名单</p>
-        <div class="name-list" id="nameList">
-            <p class="name-item">名单列表 (已自动优化):</p>
-            <p class="name-item">0 行</p>
+<div class="layout">
+    <div class="left">
+        <div class="left-scroll">
+
+            <div>
+                <div class="section-title">
+                    <div class="step-badge">1</div>
+                    上传 PPTX 模板
+                </div>
+                <div class="upload-zone" id="uploadZone">
+                    <input type="file" id="pptInput" accept=".pptx">
+                    <div class="icon">📁</div>
+                    <div class="t1">点击或拖拽上传 PPTX</div>
+                    <div class="t2">需含「营服名称」占位符</div>
+                </div>
+                <div class="file-ok" id="fileOk">
+                    <div>
+                        <div class="name" id="fileName">文件名</div>
+                        <div class="sub" id="fileHint">已识别占位符</div>
+                    </div>
+                    <button onclick="document.getElementById('pptInput').click()">更换</button>
+                </div>
+            </div>
+
+            <div>
+                <div class="section-title">
+                    <div class="step-badge">2</div>
+                    导入营服名单
+                </div>
+                <div class="input-wrap">
+                    <textarea id="textList" class="list-textarea" placeholder="每行一个营服名，例如：&#10;番禺洛浦营服&#10;天河元岗营服&#10;...&#10;或点击「OCR 识图」自动识别"></textarea>
+                    <div class="input-footer">
+                        <span class="line-badge" id="lineCount">共 0 行</span>
+                        <button class="ocr-btn" id="ocrBtn" onclick="handleOCRClick()">
+                            📷 OCR 识图
+                        </button>
+                    </div>
+                </div>
+                <input type="file" id="ocrFileInput" accept="image/*" style="display:none">
+            </div>
+
+            <div>
+                <div class="section-title">
+                    <div class="step-badge">3</div>
+                    祝福语模板
+                </div>
+                <textarea id="blessingTpl" class="blessing-ta">恭喜XXX营服当日高套封闭[庆祝][庆祝][庆祝]</textarea>
+                <div class="hint"><b>XXX</b> 将自动替换为营服名称</div>
+                <div class="toggle-row">
+                    <div class="toggle-label">自动 @营服经理</div>
+                    <label class="toggle">
+                        <input type="checkbox" id="atToggle" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="left-bottom">
+            <button id="genBtn" class="gen-btn" disabled onclick="startGen()">
+                ⚡ 开始批量生成
+            </button>
         </div>
     </div>
 
-    <!-- 模块3：祝福语模板（和原工具完全对齐） -->
-    <div class="module">
-        <h2>✏️ 3 祝福语模板</h2>
-        <textarea id="greetingTemplate">恭喜XXX营服当日高套封闭[庆祝][庆祝][庆祝]</textarea>
-        <p class="tip">用XXX作为名字占位符，生成时会自动替换为对应姓名</p>
+    <div class="right">
+        <div class="preview-section">
+            <div class="preview-label">实时效果预览</div>
+            <div class="preview-box">
+                <canvas id="previewCanvas"></canvas>
+                <div class="preview-empty" id="previewEmpty">
+                    <div class="ei">🖼️</div>
+                    <div class="et">请先上传 PPTX 模板</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="resultsSection">
+            <!-- 顶部操作栏 -->
+            <div class="results-header">
+                <div class="results-title">
+                    转发列表
+                    <span class="cnt-badge" id="resultCnt">0</span>
+                </div>
+                <button class="dl-all-btn" onclick="downloadZip()">📦 打包下载 ZIP</button>
+            </div>
+
+            <!-- 分组复制按钮区（动态生成） -->
+            <div class="group-copy-area" id="groupCopyArea">
+                <div class="group-copy-title">
+                    📱 按组复制（每5条一组，适配微信每次最多9图限制）
+                </div>
+                <div class="group-copy-tip">
+                    点击对应组的按钮，将该组的<b>图片+祝福语</b>一次性复制，粘贴到微信即可。每组最多5条，图文一一对应。
+                </div>
+                <div class="group-btns-row" id="groupBtnsRow">
+                    <!-- 动态插入按钮 -->
+                </div>
+            </div>
+
+            <!-- 卡片列表（动态插入分组标签 + 卡片） -->
+            <div class="card-list" id="cardList"></div>
+        </div>
     </div>
+</div>
 
-    <!-- 生成按钮 -->
-    <button id="generateBtn" disabled>生成并下载PPT</button>
+<div class="modal" id="modal" onclick="closeModal()">
+    <button class="modal-close">✕</button>
+    <img id="modalImg" src="" alt="">
+</div>
 
-    <script>
-        // 全局变量
-        let pptTemplate = null; // 解析后的PPT模板
-        let nameList = []; // 识别后的名单列表
-        const ocrWorker = Tesseract.createWorker(); // OCR引擎（纯前端，无数据上传）
+<div class="loader" id="loader">
+    <div class="spinner"></div>
+    <div class="loader-msg" id="loaderMsg">处理中...</div>
+</div>
 
-        // 初始化OCR中文识别引擎
-        async function initOCR() {
-            await ocrWorker.load();
-            await ocrWorker.loadLanguage('chi_sim');
-            await ocrWorker.initialize('chi_sim');
+<script>
+// ===================== 营服经理映射 =====================
+const MANAGER_MAP = {
+    "天河元岗社区":"郭文颖","天河粤垦社区":"陈锋","天河汇景社区":"李振兴","天河天府社区":"梁煜钧",
+    "天河科韵社区":"邓秉","天河石牌社区":"余路明","天河龙口社区":"郑敏婷","天河花城社区":"唐岭",
+    "天河马场社区":"林圣威","天河体育中心社区":"温一恒","天河员村社区":"梁凯","番禺东城社区":"张中敏",
+    "番禺西丽社区":"谭映荷","番禺祈福社区":"李超","番禺南站社区":"张榕生","番禺华南社区":"陈卉平",
+    "番禺洛浦社区":"黄洁莹","番禺大石社区":"陈晓通","番禺南浦社区":"何帆","番禺桥南社区":"钟文俊",
+    "番禺广场社区":"孙欣","番禺沙头社区":"邓祖延","番禺长隆社区":"关俊文","番禺石楼社区":"韩焯彬",
+    "番禺亚运城社区":"戴海洋","白云同和社区":"周俊涛","白云永平社区":"张晓明","白云同德社区":"陈秉贤",
+    "白云石井社区":"尚忠麟","白云黄石社区":"孙峻","白云景泰社区":"黄健波","白云三元里社区":"张薇",
+    "白云棠景社区":"杨兴妹","越秀大沙头社区":"庄恭槟","越秀农林社区":"刘鲁唯","越秀水荫路社区":"陈璇君",
+    "越秀洪桥社区":"王光辉","越秀淘金社区":"张明新","越秀中山一社区":"陈锡海","越秀较场西社区":"彭俊健",
+    "越秀五羊社区":"李景点","越秀解放路社区":"吴佳豪","越秀中山五社区":"张武杰","海珠江南西社区":"胡剑峰",
+    "海珠滨江西社区":"龙腾","海珠工业中社区":"陈晨","海珠宝岗社区":"邹仪","海珠晓港社区":"李狄龙",
+    "海珠江燕社区":"郑际哲","海珠东晓社区":"罗泰佳","海珠江湾社区":"况云","海珠海联社区":"郑灿强",
+    "海珠新港西社区":"雷姗姗","海珠滨江社区":"陈运潮","海珠新港中社区":"陈益耀","海珠新港东社区":"何瑞进",
+    "海珠南洲社区":"高文广","荔湾荔枝湾社区":"何文辉","荔湾彩虹社区":"林创雄","荔湾人民路社区":"谢晓霞",
+    "荔湾沿江社区":"李文","荔湾站前社区":"欧昌博","荔湾桃园社区":"肖健","荔湾双桥社区":"李德泉",
+    "荔湾金沙社区":"张丽娟","荔湾花地社区":"林楠","荔湾大冲口社区":"晏文军","荔湾广钢社区":"黄石棚",
+    "黄埔车陂联和社区":"李俊杰","黄埔东圃社区":"刘航","黄埔西部社区":"余杭","黄埔东部社区":"邱壮雄",
+    "黄埔萝岗北部社区":"况霞","黄埔萝岗南部社区":"吴庆鑫","黄埔知识城社区":"吁昊","增城永宁社区":"卢集炫",
+    "增城凤凰城社区":"曾定泰","增城永宁中社区":"季海华","增城新塘社区":"曾鸿伦","增城新塘东社区":"龚著鹏",
+    "增城荔城社区":"邬成志","增城荔城东社区":"林凯伟","增城荔湖社区":"连晓恒","增城朱村营服社区":"何秀霞",
+    "花都花城":"谢纯丽","花都新华":"潘冠杰","花都秀全":"郑椿耀","花都曙光":"林根廷","花都建设北":"刘宁",
+    "南沙进港社区":"魏泽滨","南沙港前社区":"黄卓","明珠湾社区":"何嘉莹","从化街口":"徐天乐",
+    "从化江埔河东南":"胡志刚","从化江埔河东北":"李慕菊"
+};
+
+function getManager(name) {
+    if (MANAGER_MAP[name]) return MANAGER_MAP[name];
+    const s = name.replace(/营服$/, '');
+    if (MANAGER_MAP[s]) return MANAGER_MAP[s];
+    for (const k in MANAGER_MAP) {
+        if (name.includes(k) || k.includes(name) || s.includes(k) || k.includes(s)) return MANAGER_MAP[k];
+    }
+    return '';
+}
+
+// ===================== 全局状态 =====================
+const GROUP_SIZE = 5; // 每组5条
+
+let bgImageEl = null;
+let pptW = 1280, pptH = 720;
+let textBoxInfo = null;
+let generatedImages = []; // [{name, dataUrl, blessing}]
+let ocrWorker = null;
+let ocrState = 'idle';
+
+const canvas = document.getElementById('previewCanvas');
+const ctx = canvas.getContext('2d');
+
+// ===================== Loader =====================
+function showLoader(show, msg = '处理中...') {
+    document.getElementById('loaderMsg').textContent = msg;
+    document.getElementById('loader').classList.toggle('show', show);
+}
+
+// ===================== OCR =====================
+function setOCRStatus(state, text) {
+    ocrState = state;
+    const badge = document.getElementById('ocrBadge');
+    const dot = document.getElementById('ocrDot');
+    const label = document.getElementById('ocrText');
+    dot.className = 'dot ' + state;
+    badge.className = 'ocr-badge ' + state;
+    label.textContent = text;
+}
+
+async function loadOCR() {
+    if (ocrState === 'ready') return true;
+    if (ocrState === 'loading') {
+        for (let i = 0; i < 60 && ocrState === 'loading'; i++) {
+            await new Promise(r => setTimeout(r, 500));
         }
-        initOCR();
-
-        // 1. 处理PPT模板上传与解析
-        const pptFileInput = document.getElementById('pptFile');
-        const pptStatus = document.getElementById('pptStatus');
-        const generateBtn = document.getElementById('generateBtn');
-
-        pptFileInput.addEventListener('change', async (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            // 校验文件格式
-            if (!file.name.endsWith('.pptx')) {
-                pptStatus.textContent = '请上传.pptx格式的PPT文件';
-                pptStatus.className = 'status status-error';
-                return;
-            }
-
+        return ocrState === 'ready';
+    }
+    setOCRStatus('loading', 'OCR 加载中...');
+    return new Promise((resolve) => {
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+        script.onload = async () => {
             try {
-                pptStatus.textContent = '正在解析PPT模板...';
-                pptStatus.className = 'status status-success';
-                
-                // 解析PPT文件
-                const arrayBuffer = await file.arrayBuffer();
-                const parsed = await pptParser.parsePPT(arrayBuffer);
-                pptTemplate = parsed;
-
-                pptStatus.textContent = `PPT模板解析成功！共${pptTemplate.slides.length}页`;
-                pptStatus.className = 'status status-success';
-                updateBtnStatus();
-            } catch (err) {
-                console.error('PPT解析失败：', err);
-                pptStatus.textContent = 'PPT解析失败，请重试';
-                pptStatus.className = 'status status-error';
+                ocrWorker = await Tesseract.createWorker('chi_sim');
+                setOCRStatus('ready', 'OCR 就绪');
+                resolve(true);
+            } catch (e) {
+                setOCRStatus('failed', 'OCR 加载失败');
+                resolve(false);
             }
-        });
+        };
+        script.onerror = () => {
+            setOCRStatus('failed', 'OCR 加载失败');
+            resolve(false);
+        };
+        document.head.appendChild(script);
+    });
+}
 
-        // 2. 处理名单图片OCR识别
-        const nameImageInput = document.getElementById('nameImage');
-        const ocrStatus = document.getElementById('ocrStatus');
-        const nameListDom = document.getElementById('nameList');
+async function handleOCRClick() {
+    showLoader(true, 'OCR 引擎加载中，首次使用需下载语言包...');
+    const ok = await loadOCR();
+    showLoader(false);
+    if (!ok) {
+        alert('OCR 引擎加载失败，可能是网络问题。\n请手动输入营服名单，或检查网络后重试。');
+        return;
+    }
+    document.getElementById('ocrFileInput').click();
+}
 
-        nameImageInput.addEventListener('change', async (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
+document.getElementById('ocrFileInput').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    showLoader(true, 'AI 识别中...');
+    try {
+        const dataUrl = await resizeImg(file);
+        const ret = await ocrWorker.recognize(dataUrl);
+        const lines = ret.data.text.split('\n')
+            .map(l => l.replace(/\s+/g, '').trim())
+            .filter(l => l.length > 1)
+            .map(l => l.endsWith('营服') ? l : l + '营服');
+        document.getElementById('textList').value = lines.join('\n');
+        updateLineCount();
+        if (lines.length > 0) renderPreview(lines[0]);
+    } catch (err) {
+        alert('OCR 识别失败: ' + err.message);
+    } finally {
+        showLoader(false);
+        e.target.value = '';
+    }
+});
 
-            try {
-                ocrStatus.textContent = '正在识别名单...';
-                ocrStatus.className = 'status status-success';
-                
-                // OCR识别图片文本
-                const { data: { text } } = await ocrWorker.recognize(file);
-                
-                // 优化名单：按行分割、去空行、去多余空格、过滤无效内容
-                nameList = text.split('\n')
-                    .map(line => line.trim())
-                    .filter(line => line.length > 0);
-                
-                // 更新页面显示
-                ocrStatus.textContent = `名单识别成功！共识别到${nameList.length}个姓名`;
-                ocrStatus.className = 'status status-success';
-                renderNameList();
-                updateBtnStatus();
-            } catch (err) {
-                console.error('OCR识别失败：', err);
-                ocrStatus.textContent = '名单识别失败，请重试';
-                ocrStatus.className = 'status status-error';
+function resizeImg(file) {
+    return new Promise(resolve => {
+        const img = new Image();
+        img.onload = () => {
+            const c = document.createElement('canvas');
+            const MAX = 2000;
+            let w = img.width, h = img.height;
+            if (w > MAX) { h = h * MAX / w; w = MAX; }
+            c.width = w; c.height = h;
+            c.getContext('2d').drawImage(img, 0, 0, w, h);
+            resolve(c.toDataURL('image/jpeg', 0.85));
+        };
+        img.src = URL.createObjectURL(file);
+    });
+}
+
+// ===================== PPTX 解析 =====================
+document.getElementById('pptInput').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    showLoader(true, '解析 PPTX 模板...');
+    try {
+        const buf = await file.arrayBuffer();
+        const zip = await JSZip.loadAsync(buf);
+
+        const slideXml = await zip.file('ppt/slides/slide1.xml').async('string');
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(slideXml, 'text/xml');
+
+        const TARGET = '营服名称';
+        let targetSp = null;
+        const allEls = doc.getElementsByTagName('*');
+        for (let i = 0; i < allEls.length; i++) {
+            const el = allEls[i];
+            if (el.localName === 'p') {
+                const tEls = el.getElementsByTagName('*');
+                let txt = '';
+                for (let k = 0; k < tEls.length; k++) {
+                    if (tEls[k].localName === 't') txt += tEls[k].textContent;
+                }
+                if (txt.replace(/\s/g, '').includes(TARGET)) {
+                    let node = el;
+                    while (node) {
+                        if (node.localName === 'sp') { targetSp = node; break; }
+                        node = node.parentNode;
+                    }
+                    if (targetSp) break;
+                }
             }
-        });
-
-        // 渲染名单列表
-        function renderNameList() {
-            let html = `<p class="name-item">名单列表 (已自动优化):</p>`;
-            html += `<p class="name-item">${nameList.length} 行</p>`;
-            nameList.forEach((name, index) => {
-                html += `<p class="name-item">${index + 1}. ${name}</p>`;
-            });
-            nameListDom.innerHTML = html;
         }
 
-        // 更新生成按钮状态
-        function updateBtnStatus() {
-            generateBtn.disabled = !(pptTemplate && nameList.length > 0);
+        if (!targetSp) throw new Error('首页未找到「营服名称」占位符，请检查 PPTX 模板。');
+
+        const spPr = findChild(targetSp, 'spPr');
+        const xfrm = findChild(spPr, 'xfrm');
+        const off = findChild(xfrm, 'off');
+        const ext = findChild(xfrm, 'ext');
+        if (!off || !ext) throw new Error('无法读取文本框坐标。');
+
+        const presXml = await zip.file('ppt/presentation.xml').async('string');
+        const presDoc = parser.parseFromString(presXml, 'text/xml');
+        let sldSz = null;
+        const pEls = presDoc.getElementsByTagName('*');
+        for (let i = 0; i < pEls.length; i++) {
+            if (pEls[i].localName === 'sldSz') { sldSz = pEls[i]; break; }
         }
 
-        // 3. 核心：批量生成PPT
-        const greetingTemplate = document.getElementById('greetingTemplate');
-        generateBtn.addEventListener('click', async () => {
-            if (!pptTemplate || nameList.length === 0) return;
+        const EMU = 96 / 914400;
+        pptW = parseInt(sldSz.getAttribute('cx')) * EMU;
+        pptH = parseInt(sldSz.getAttribute('cy')) * EMU;
 
-            try {
-                generateBtn.textContent = '正在生成PPT...';
-                generateBtn.disabled = true;
+        const tbX = parseInt(off.getAttribute('x')) * EMU;
+        const tbY = parseInt(off.getAttribute('y')) * EMU;
+        const tbW = parseInt(ext.getAttribute('cx')) * EMU;
+        const tbH = parseInt(ext.getAttribute('cy')) * EMU;
 
-                // 创建新PPT实例
-                const newPpt = new PptxGenJS();
-                const EMU_TO_INCH = 914400; // EMU转英寸单位（PPT标准单位转换）
-
-                // 遍历每个姓名，批量生成页面
-                for (const name of nameList) {
-                    // 替换祝福语占位符
-                    const finalGreeting = greetingTemplate.value.replace(/XXX/g, name);
-
-                    // 复制模板的每一页，替换内容
-                    for (const templateSlide of pptTemplate.slides) {
-                        const newSlide = newPpt.addSlide();
-
-                        // 遍历模板页的所有元素，还原样式+替换文本
-                        for (const element of templateSlide.elements) {
-                            // 处理文本元素（核心填字功能）
-                            if (element.type === 'text' && element.text) {
-                                // 替换占位符：XXX替换为姓名，{greeting}替换为完整祝福语
-                                let finalText = element.text.replace(/XXX/g, name);
-                                finalText = finalText.replace(/\{greeting\}/g, finalGreeting);
-
-                                // 还原原文本的样式、位置、大小
-                                newSlide.addText(finalText, {
-                                    x: element.x / EMU_TO_INCH,
-                                    y: element.y / EMU_TO_INCH,
-                                    w: element.w / EMU_TO_INCH,
-                                    h: element.h / EMU_TO_INCH,
-                                    fontSize: element.fontSize || 16,
-                                    color: element.color || '333333',
-                                    bold: element.bold || false,
-                                    italic: element.italic || false,
-                                    align: element.align || 'left',
-                                    fontFace: element.fontFace || '微软雅黑'
-                                });
-                            }
-
-                            // 还原图片元素（保持模板原样）
-                            if (element.type === 'image' && element.imageData) {
-                                newSlide.addImage({
-                                    data: element.imageData,
-                                    x: element.x / EMU_TO_INCH,
-                                    y: element.y / EMU_TO_INCH,
-                                    w: element.w / EMU_TO_INCH,
-                                    h: element.h / EMU_TO_INCH
-                                });
-                            }
-
-                            // 还原形状元素（保持模板原样）
-                            if (element.type === 'shape') {
-                                newSlide.addShape(element.shapeType, {
-                                    x: element.x / EMU_TO_INCH,
-                                    y: element.y / EMU_TO_INCH,
-                                    w: element.w / EMU_TO_INCH,
-                                    h: element.h / EMU_TO_INCH,
-                                    fill: { color: element.fillColor || 'ffffff' },
-                                    line: { color: element.borderColor, width: element.borderWidth || 0 }
-                                });
-                            }
+        let fontSize = 20, fontColor = '#c00000';
+        try {
+            const txBody = findChild(targetSp, 'txBody');
+            const pEl = txBody ? findChild(txBody, 'p') : null;
+            if (pEl) {
+                const rEls = pEl.getElementsByTagName('*');
+                for (let i = 0; i < rEls.length; i++) {
+                    if (rEls[i].localName === 'rPr') {
+                        const sz = rEls[i].getAttribute('sz');
+                        if (sz) fontSize = parseInt(sz) / 100 * 1.33;
+                        const sf = findChild(rEls[i], 'solidFill');
+                        if (sf) {
+                            const sc = findChild(sf, 'srgbClr');
+                            if (sc) fontColor = '#' + sc.getAttribute('val');
                         }
+                        break;
                     }
                 }
-
-                // 下载生成好的PPT
-                await newPpt.writeFile({ fileName: '批量生成_填字PPT.pptx' });
-                
-                generateBtn.textContent = '生成并下载PPT';
-                generateBtn.disabled = false;
-                alert('PPT生成成功！已自动开始下载');
-            } catch (err) {
-                console.error('PPT生成失败：', err);
-                alert('PPT生成失败，请重试');
-                generateBtn.textContent = '生成并下载PPT';
-                generateBtn.disabled = false;
             }
-        });
+        } catch (_) {}
 
-        // 页面关闭时释放OCR资源
-        window.addEventListener('beforeunload', async () => {
-            await ocrWorker.terminate();
-        });
-    </script>
+        textBoxInfo = { x: tbX, y: tbY, w: tbW, h: tbH, fontSize, color: fontColor };
+
+        let bgB64 = null;
+        const media = zip.folder('ppt/media');
+        let best = { name: '', size: 0 };
+        if (media) {
+            media.forEach((path, f) => {
+                if (/\.(jpe?g|png)$/i.test(path) && f._data && f._data.uncompressedSize > best.size) {
+                    best = { name: path, size: f._data.uncompressedSize };
+                }
+            });
+        }
+        if (best.name) {
+            const b64 = await media.file(best.name).async('base64');
+            const ext2 = best.name.split('.').pop().toLowerCase().replace('jpg', 'jpeg');
+            bgB64 = `data:image/${ext2};base64,${b64}`;
+        }
+        if (!bgB64) {
+            try {
+                const tb = await zip.file('docProps/thumbnail.jpeg').async('base64');
+                bgB64 = 'data:image/jpeg;base64,' + tb;
+            } catch (_) {}
+        }
+        if (!bgB64) throw new Error('无法提取背景图，请确保 PPTX 内含图片背景。');
+
+        bgImageEl = new Image();
+        bgImageEl.onload = () => {
+            document.getElementById('uploadZone').style.display = 'none';
+            const fo = document.getElementById('fileOk');
+            fo.style.display = 'flex';
+            document.getElementById('fileName').textContent = file.name;
+            document.getElementById('fileHint').textContent = '✓ 已找到「营服名称」占位符';
+            document.getElementById('previewEmpty').style.display = 'none';
+            canvas.style.display = 'block';
+            renderPreview('营服名称');
+            updateGenBtn();
+        };
+        bgImageEl.src = bgB64;
+
+    } catch (err) {
+        alert('解析失败：' + err.message);
+        console.error(err);
+    } finally {
+        showLoader(false);
+        e.target.value = '';
+    }
+});
+
+function findChild(parent, localName) {
+    if (!parent) return null;
+    for (let i = 0; i < parent.children.length; i++) {
+        if (parent.children[i].localName === localName) return parent.children[i];
+    }
+    return null;
+}
+
+// ===================== Canvas 渲染 =====================
+function renderPreview(text) {
+    if (!bgImageEl) return;
+    canvas.width = pptW;
+    canvas.height = pptH;
+    ctx.clearRect(0, 0, pptW, pptH);
+    ctx.drawImage(bgImageEl, 0, 0, pptW, pptH);
+    if (textBoxInfo) {
+        const tb = textBoxInfo;
+        ctx.font = `900 ${tb.fontSize}px "SimHei","STHeiti","Microsoft YaHei",sans-serif`;
+        ctx.fillStyle = tb.color;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(text, tb.x + tb.w / 2, tb.y + tb.h / 2);
+    }
+    const box = document.querySelector('.preview-box');
+    const maxW = box.clientWidth - 24;
+    const scale = Math.min(1, maxW / pptW);
+    canvas.style.width = (pptW * scale) + 'px';
+    canvas.style.height = (pptH * scale) + 'px';
+}
+
+// ===================== 生成 =====================
+function updateLineCount() {
+    const lines = getLines();
+    document.getElementById('lineCount').textContent = `共 ${lines.length} 行`;
+    updateGenBtn();
+}
+
+function getLines() {
+    return document.getElementById('textList').value
+        .split('\n').map(l => l.trim()).filter(l => l.length > 0);
+}
+
+function updateGenBtn() {
+    document.getElementById('genBtn').disabled = !bgImageEl || getLines().length === 0;
+}
+
+async function startGen() {
+    const lines = getLines();
+    if (!lines.length || !bgImageEl) return;
+
+    showLoader(true, '初始化...');
+    generatedImages = [];
+
+    const blessingTpl = document.getElementById('blessingTpl').value || 'XXX营服当日高套封闭[庆祝][庆祝][庆祝]';
+    const useAt = document.getElementById('atToggle').checked;
+
+    document.getElementById('resultsSection').style.display = 'block';
+    document.getElementById('resultCnt').textContent = lines.length;
+    const cardList = document.getElementById('cardList');
+    cardList.innerHTML = '';
+
+    const offCanvas = document.createElement('canvas');
+    const SCALE = 2;
+    offCanvas.width = pptW * SCALE;
+    offCanvas.height = pptH * SCALE;
+    const offCtx = offCanvas.getContext('2d');
+
+    for (let i = 0; i < lines.length; i++) {
+        const name = lines[i];
+        showLoader(true, `渲染 ${i + 1}/${lines.length}：${name}`);
+
+        offCtx.clearRect(0, 0, offCanvas.width, offCanvas.height);
+        offCtx.drawImage(bgImageEl, 0, 0, offCanvas.width, offCanvas.height);
+        if (textBoxInfo) {
+            const tb = textBoxInfo;
+            offCtx.font = `900 ${tb.fontSize * SCALE}px "SimHei","STHeiti","Microsoft YaHei",sans-serif`;
+            offCtx.fillStyle = tb.color;
+            offCtx.textAlign = 'center';
+            offCtx.textBaseline = 'middle';
+            offCtx.fillText(name, (tb.x + tb.w / 2) * SCALE, (tb.y + tb.h / 2) * SCALE);
+        }
+
+        const dataUrl = offCanvas.toDataURL('image/png');
+
+        const cleanName = name.replace(/营服$/, '');
+        let blessing = blessingTpl.replace(/XXX/g, cleanName);
+        if (useAt) {
+            const mgr = getManager(cleanName);
+            if (mgr) blessing += ` @${mgr}`;
+        }
+
+        generatedImages.push({ name: name + '.png', dataUrl, blessing });
+
+        // 在每组第一条前插入分组标签
+        if (i % GROUP_SIZE === 0) {
+            const groupNum = Math.floor(i / GROUP_SIZE) + 1;
+            const totalGroups = Math.ceil(lines.length / GROUP_SIZE);
+            const groupStart = i + 1;
+            const groupEnd = Math.min(i + GROUP_SIZE, lines.length);
+            const labelDiv = document.createElement('div');
+            labelDiv.className = 'group-label';
+            labelDiv.innerHTML = `
+                <div class="group-label-line"></div>
+                <div class="group-label-text">第 ${groupNum} 组 · 第 ${groupStart}–${groupEnd} 条</div>
+                <div class="group-label-line"></div>
+            `;
+            cardList.appendChild(labelDiv);
+        }
+
+        const card = document.createElement('div');
+        card.className = 'fwd-card';
+        const imgId = `img_${i}`;
+        card.innerHTML = `
+            <div class="card-img" onclick="openModal('${imgId}')">
+                <img id="${imgId}" src="${dataUrl}" alt="${name}" loading="lazy">
+                <div class="overlay"><span class="zoom-text">🔍 点击放大</span></div>
+            </div>
+            <div class="card-text">
+                <div class="card-seq">第 ${i + 1} 条 · ${name}</div>
+                <div class="blessing-box" id="b${i}">${blessing}</div>
+                <button class="copy-btn" id="cb${i}" onclick="copyBlessing(${i})">
+                    📋 一键复制祝福语
+                </button>
+            </div>
+        `;
+        cardList.appendChild(card);
+        await new Promise(r => setTimeout(r, 20));
+    }
+
+    // 生成分组复制按钮
+    buildGroupCopyButtons(lines.length);
+
+    renderPreview(lines[lines.length - 1]);
+    showLoader(false);
+    document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ===================== 构建分组复制按钮 =====================
+function buildGroupCopyButtons(total) {
+    const area = document.getElementById('groupCopyArea');
+    const row = document.getElementById('groupBtnsRow');
+    row.innerHTML = '';
+
+    const totalGroups = Math.ceil(total / GROUP_SIZE);
+
+    // 只有超过1组才显示分组按钮区
+    if (totalGroups <= 1 && total <= GROUP_SIZE) {
+        // 只有一组时显示简单的单按钮
+        area.style.display = 'block';
+        const btn = document.createElement('button');
+        btn.className = 'group-copy-btn';
+        btn.id = 'gcb_0';
+        btn.innerHTML = `📱 复制全部 ${total} 条（图文对应）`;
+        btn.onclick = () => copyGroup(0);
+        row.appendChild(btn);
+        return;
+    }
+
+    area.style.display = 'block';
+
+    for (let g = 0; g < totalGroups; g++) {
+        const start = g * GROUP_SIZE;
+        const end = Math.min(start + GROUP_SIZE, total);
+        const btn = document.createElement('button');
+        btn.className = 'group-copy-btn';
+        btn.id = `gcb_${g}`;
+        btn.innerHTML = `📱 第${g + 1}组 · 第${start + 1}–${end}条（共${end - start}张）`;
+        btn.onclick = () => copyGroup(g);
+        row.appendChild(btn);
+    }
+}
+
+// ===================== 复制某一组（图文对应富文本） =====================
+async function copyGroup(groupIndex) {
+    const start = groupIndex * GROUP_SIZE;
+    const end = Math.min(start + GROUP_SIZE, generatedImages.length);
+    const items = generatedImages.slice(start, end);
+    if (!items.length) return;
+
+    const btn = document.getElementById(`gcb_${groupIndex}`);
+    const origHTML = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '⏳ 整合中...';
+
+    try {
+        let htmlParts = `<div style="font-family:sans-serif;">`;
+        for (let i = 0; i < items.length; i++) {
+            const item = items[i];
+            const compressed = await compressDataUrl(item.dataUrl, 800);
+            htmlParts += `
+                <div style="margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid #eee;">
+                    <img src="${compressed}" style="max-width:600px;width:100%;display:block;border-radius:6px;" alt="${item.name}">
+                    <p style="margin-top:10px;font-size:15px;line-height:1.8;color:#222;">${escapeHtml(item.blessing)}</p>
+                </div>`;
+        }
+        htmlParts += `</div>`;
+
+        const plainText = items.map((item, i) =>
+            `【第${start + i + 1}条 · ${item.name.replace('.png', '')}】\n${item.blessing}`
+        ).join('\n\n---\n\n');
+
+        if (navigator.clipboard && window.ClipboardItem) {
+            const htmlBlob = new Blob([htmlParts], { type: 'text/html' });
+            const textBlob = new Blob([plainText], { type: 'text/plain' });
+            await navigator.clipboard.write([
+                new ClipboardItem({ 'text/html': htmlBlob, 'text/plain': textBlob })
+            ]);
+        } else {
+            // 降级：execCommand
+            const tempDiv = document.createElement('div');
+            tempDiv.style.cssText = 'position:fixed;left:-9999px;top:0;opacity:0;';
+            tempDiv.innerHTML = htmlParts;
+            document.body.appendChild(tempDiv);
+            const sel = window.getSelection();
+            const range = document.createRange();
+            range.selectNodeContents(tempDiv);
+            sel.removeAllRanges();
+            sel.addRange(range);
+            document.execCommand('copy');
+            sel.removeAllRanges();
+            document.body.removeChild(tempDiv);
+        }
+
+        btn.innerHTML = `✅ 第${groupIndex + 1}组已复制！粘贴到微信即可`;
+        btn.classList.add('done');
+        setTimeout(() => {
+            btn.innerHTML = origHTML;
+            btn.classList.remove('done');
+            btn.disabled = false;
+        }, 4000);
+
+    } catch (err) {
+        btn.innerHTML = origHTML;
+        btn.disabled = false;
+        alert('复制失败（' + err.message + '）\n请尝试逐条复制，或使用「打包下载 ZIP」保存图片。');
+    }
+}
+
+// ===================== 工具函数 =====================
+function compressDataUrl(dataUrl, maxWidth) {
+    return new Promise(resolve => {
+        const img = new Image();
+        img.onload = () => {
+            const c = document.createElement('canvas');
+            let w = img.width, h = img.height;
+            if (w > maxWidth) { h = Math.round(h * maxWidth / w); w = maxWidth; }
+            c.width = w; c.height = h;
+            c.getContext('2d').drawImage(img, 0, 0, w, h);
+            resolve(c.toDataURL('image/jpeg', 0.75));
+        };
+        img.src = dataUrl;
+    });
+}
+
+function escapeHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ===================== 单条复制祝福语 =====================
+function copyBlessing(i) {
+    const el = document.getElementById('b' + i);
+    const btn = document.getElementById('cb' + i);
+    if (!el || !btn) return;
+    navigator.clipboard.writeText(el.innerText).then(() => {
+        const orig = btn.innerHTML;
+        btn.innerHTML = '✅ 已复制！';
+        btn.classList.add('done');
+        setTimeout(() => { btn.innerHTML = orig; btn.classList.remove('done'); }, 2000);
+    }).catch(() => {
+        const r = document.createRange(); r.selectNodeContents(el);
+        const s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+        document.execCommand('copy');
+    });
+}
+
+// ===================== 打包下载 =====================
+async function downloadZip() {
+    if (!generatedImages.length) return;
+    showLoader(true, '打包中...');
+    const zip = new JSZip();
+    const folder = zip.folder('营服图片');
+    generatedImages.forEach(img => {
+        folder.file(img.name, img.dataUrl.split(',')[1], { base64: true });
+    });
+    const blob = await zip.generateAsync({ type: 'blob' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = '营服PPT批量生成.zip';
+    a.click();
+    showLoader(false);
+}
+
+// ===================== Modal =====================
+function openModal(imgId) {
+    const src = document.getElementById(imgId)?.src;
+    if (!src) return;
+    document.getElementById('modalImg').src = src;
+    document.getElementById('modal').classList.add('open');
+}
+function closeModal() {
+    document.getElementById('modal').classList.remove('open');
+    document.getElementById('modalImg').src = '';
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+// ===================== 初始化 =====================
+document.getElementById('textList').addEventListener('input', updateLineCount);
+</script>
 </body>
 </html>
