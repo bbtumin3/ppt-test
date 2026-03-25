@@ -800,77 +800,100 @@
             .ocr-col + .ocr-col { border-left: none; border-top: 1.5px solid var(--border); }
         }
 
-        /* ── COOL INTERACTIVE EFFECTS ── */
+        /* ── INTERACTIVE & MINIMALIST EFFECTS ── */
         body {
-            background: linear-gradient(120deg, var(--bg), #f4f9fd, var(--bg), var(--bg));
-            background-size: 400% 400%;
-            animation: gradientBG 15s ease infinite;
+            background: #fafafc;
+            background-image: 
+                radial-gradient(at 40% 20%, rgba(168,200,240,0.1) 0px, transparent 50%),
+                radial-gradient(at 80% 0%, rgba(244,167,195,0.1) 0px, transparent 50%),
+                radial-gradient(at 0% 50%, rgba(244,167,195,0.1) 0px, transparent 50%);
+            animation: subtleBgMove 20s ease-in-out infinite alternate;
         }
-        @keyframes gradientBG {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+        @keyframes subtleBgMove {
+            0% { background-position: 0% 0%; }
+            100% { background-position: 100% 100%; }
         }
-        .bg-bubbles {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; overflow: hidden;
-        }
-        .bubble {
-            position: absolute; border-radius: 50%;
-            background: radial-gradient(circle at 30% 30%, rgba(244,167,195,0.15), rgba(168,200,240,0.1));
-            box-shadow: 0 8px 32px rgba(244,167,195,0.1);
-            animation: float 10s infinite ease-in-out;
-        }
-        .bubble:nth-child(1) { width: 300px; height: 300px; left: -10%; top: -10%; animation-duration: 12s; }
-        .bubble:nth-child(2) { width: 400px; height: 400px; right: -10%; top: 40%; animation-duration: 15s; animation-delay: -2s; }
-        .bubble:nth-child(3) { width: 250px; height: 250px; left: 40%; bottom: -20%; animation-duration: 18s; animation-delay: -5s; }
-        @keyframes float {
-            0% { transform: translateY(0) scale(1) rotate(0deg); }
-            33% { transform: translateY(-30px) scale(1.05) rotate(5deg); }
-            66% { transform: translateY(20px) scale(0.95) rotate(-5deg); }
-            100% { transform: translateY(0) scale(1) rotate(0deg); }
-        }
+
+        /* 简约侧边栏 */
         .sidebar {
-            background: rgba(255, 255, 255, 0.75);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(0,0,0,0.04);
+            box-shadow: 2px 0 20px rgba(0,0,0,0.02);
         }
-        .ta-card, .fwd-card, .preview-frame {
+
+        /* 简约卡片样式 */
+        .ta-card, .fwd-card, .preview-frame, .dropzone {
+            background: #ffffff;
+            border: 1px solid rgba(0,0,0,0.06);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
             transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
-        .ta-card:hover, .preview-frame:hover {
-            box-shadow: 0 8px 24px rgba(220,150,195,0.15);
+        .ta-card:hover, .fwd-card:hover, .preview-frame:hover {
+            box-shadow: 0 8px 24px rgba(0,0,0,0.06);
             transform: translateY(-2px);
+            border-color: rgba(168,200,240,0.4);
         }
+
+        /* 简约流光按钮 */
         .gen-btn {
-            position: relative; overflow: hidden;
+            background: #2b2b2b;
+            color: #fff;
+            border-radius: 12px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            position: relative; 
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        .gen-btn:hover:not(:disabled) {
+            background: #1a1a1a;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.15);
         }
         .gen-btn::after {
             content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
-            background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%);
+            background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0) 100%);
             transform: rotate(30deg) translateY(-50%);
-            animation: buttonShine 3s infinite;
+            animation: buttonShine 4s infinite;
         }
         @keyframes buttonShine {
             0% { transform: translateX(-100%) rotate(30deg); }
             100% { transform: translateX(100%) rotate(30deg); }
         }
-        .dropzone.drag-over {
-            animation: pulseGlow 1.5s infinite;
+
+        /* 简约拖拽区 */
+        .dropzone {
+            background: #fafafc;
+            border: 2px dashed rgba(0,0,0,0.1);
         }
-        @keyframes pulseGlow {
-            0% { box-shadow: 0 0 0 0 rgba(244,167,195,0.4); }
-            70% { box-shadow: 0 0 0 15px rgba(244,167,195,0); }
-            100% { box-shadow: 0 0 0 0 rgba(244,167,195,0); }
+        .dropzone:hover, .dropzone.drag-over {
+            background: #f0f7ff;
+            border-color: #6fa8e8;
+            box-shadow: 0 0 0 4px rgba(111,168,232,0.1);
+        }
+
+        /* 交互微动效 */
+        .btn-ghost:hover, .ocr-btn:hover, .zip-btn:hover {
+            transform: translateY(-1px);
+            background: #f0f7ff;
+            border-color: rgba(111,168,232,0.4);
+            color: #4a90e2;
         }
         .logo-gem {
+            background: #2b2b2b;
+            color: #fff;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
         .logo:hover .logo-gem {
-            transform: rotate(360deg) scale(1.15);
+            transform: rotate(180deg) scale(1.1);
         }
-        .btn-ghost:hover, .ocr-btn:hover, .zip-btn:hover {
-            transform: translateY(-1px) scale(1.02);
-        }
+        
+        /* 隐藏原本花哨的气泡 */
+        .bg-bubbles { display: none; }
     </style>
 </head>
 <body>
@@ -1220,6 +1243,105 @@ function getManager(name) {
     return '';
 }
 
+/**
+ * Fuzzy match OCR name against MANAGER_MAP keys
+ * Finds the most likely real name for slightly misrecognized OCR results
+ */
+function fuzzyMatchRealName(ocrName) {
+    const cleanOcr = stripSuffix(ocrName);
+    
+    // 1. Exact match first
+    if (MANAGER_MAP[ocrName]) return ocrName;
+    if (MANAGER_MAP[cleanOcr]) return cleanOcr;
+    
+    // 2. Extract District Prefix
+    let currentDistrict = '';
+    for (const d of DISTRICT_PREFIXES) {
+        if (cleanOcr.startsWith(d)) {
+            currentDistrict = d;
+            break;
+        }
+    }
+    
+    // 3. Contains match (OCR name is a substring of real name or vice versa)
+    for (const realName of Object.keys(MANAGER_MAP)) {
+        const cleanReal = stripSuffix(realName);
+        if (cleanReal.includes(cleanOcr) || cleanOcr.includes(cleanReal)) {
+            return realName;
+        }
+    }
+    
+    // 4. Advanced character overlap scoring (specifically looking within the same district first)
+    let bestMatch = ocrName;
+    let maxScore = 0;
+    
+    for (const realName of Object.keys(MANAGER_MAP)) {
+        const cleanReal = stripSuffix(realName);
+        let score = 0;
+        
+        // Find district of the real name
+        let realDistrict = '';
+        for (const d of DISTRICT_PREFIXES) {
+            if (cleanReal.startsWith(d)) { realDistrict = d; break; }
+        }
+        
+        // Strategy A: If OCR has a valid district, heavily penalize matches outside that district
+        // e.g. OCR is "白云永x", only look for "白云" start
+        if (currentDistrict && realDistrict && currentDistrict !== realDistrict) {
+            continue; // Skip entirely if district doesn't match
+        }
+        
+        // Strategy B: If OCR has NO district (or wrong one but we didn't catch it), 
+        // try to match the "stem" (营服名) against all real stems
+        let ocrStemOnly = currentDistrict ? cleanOcr.slice(currentDistrict.length) : cleanOcr;
+        let realStemOnly = realDistrict ? cleanReal.slice(realDistrict.length) : cleanReal;
+        
+        // Count matching characters in the STEM only
+        let stemMatches = 0;
+        for (const char of ocrStemOnly) {
+            if (realStemOnly.includes(char)) stemMatches += 1;
+        }
+        
+        // Boost score if they share the exact same district prefix
+        if (currentDistrict && currentDistrict === realDistrict) {
+            score += 5; // Big boost for correct district
+        }
+        
+        score += stemMatches * 2; // 2 points per matching char in stem
+        
+        // Calculate similarity percentage based on STEM length
+        const maxLen = Math.max(ocrStemOnly.length, realStemOnly.length);
+        const similarity = maxLen > 0 ? stemMatches / maxLen : 0;
+        
+        // If similarity is high enough, consider it a match
+        // e.g. "东围" vs "东圃" (1 match out of 2 = 50%, but with district boost it wins)
+        if ((similarity >= 0.5 || stemMatches >= 2) && score > maxScore) {
+            maxScore = score;
+            bestMatch = realName;
+        }
+    }
+    
+    // 5. Fallback: If still no good match and OCR had a wrong district (like 茂湾彩虹), 
+    // try cross-district stem matching
+    if (bestMatch === ocrName && currentDistrict === '') {
+        for (const realName of Object.keys(MANAGER_MAP)) {
+            const cleanReal = stripSuffix(realName);
+            let realDistrict = '';
+            for (const d of DISTRICT_PREFIXES) {
+                if (cleanReal.startsWith(d)) { realDistrict = d; break; }
+            }
+            
+            // Try to see if the OCR string contains a real stem
+            let realStemOnly = realDistrict ? cleanReal.slice(realDistrict.length) : cleanReal;
+            if (realStemOnly.length >= 2 && cleanOcr.includes(realStemOnly)) {
+                 return realName; // e.g. "茂湾彩虹" includes "彩虹" -> returns "荔湾彩虹"
+            }
+        }
+    }
+    
+    return bestMatch;
+}
+
 function getShortName(fullName, district) {
     let s = stripSuffix(fullName);
     if (s.startsWith(district)) s = s.slice(district.length);
@@ -1372,6 +1494,7 @@ async function handleOCRClick() {
 
 // ── OCR POST-PROCESSING ──
 function processOCRLines(rawText) {
+    // Basic cleanup: remove extra spaces but keep newlines for structure
     const rawLines = rawText.split('\n')
         .map(l => l.replace(/\s+/g, '').trim())
         .filter(l => l.length > 0);
@@ -1384,10 +1507,12 @@ function processOCRLines(rawText) {
     while (i < rawLines.length) {
         const cur = rawLines[i];
         const next = rawLines[i + 1] || '';
+        
+        // Handle lines broken in the middle of a name
         if (
             next &&
             !cur.endsWith('营服') && !cur.endsWith('社区') && !cur.endsWith('社区营服') &&
-            CONTINUATION_STARTERS.test(next) &&
+            (CONTINUATION_STARTERS.test(next) || next.length <= 3) &&
             cur.length <= 10
         ) {
             merged.push(cur + next);
@@ -1398,23 +1523,65 @@ function processOCRLines(rawText) {
         }
     }
 
-    const JUNK_LINE = /^[\d\s\-_.,，。、|｜/\\]+$/;
-    const MIN_LEN = 3;
+    const JUNK_LINE = /^[\d\s\-_.,，。、|｜/\\:;；：'"\[\]\{\}]+$/;
+    const MIN_LEN = 2;
     const seen = new Set();
     const stems = [];
 
+    // Common OCR mistake corrections
+    const OCR_CORRECTIONS = {
+        '东围': '东圃',
+        '茂湾': '荔湾',
+        '番昌': '番禺',
+        '莎城': '荔城',
+        '黄浦': '黄埔',
+        '夭河': '天河',
+        '天问': '天河',
+        '自云': '白云',
+        '越秀': '越秀',
+        '海球': '海珠',
+        '曾城': '增城',
+        '南沙': '南沙',
+        '花都': '花都',
+        '从化': '从化'
+    };
+
     for (let name of merged) {
+        // Strip out common leading garbage like list numbers, bullet points
+        name = name.replace(/^[\d\s\-_.,，。、|｜/\\:;；：'"\[\]\{\}]+/, '');
+        // Strip out trailing garbage
+        name = name.replace(/[\s\-_.,，。、|｜/\\:;；：'"\[\]\{\}]+$/, '');
+        // Keep only valid Chinese chars, english letters and numbers for the main body
         name = name.replace(/[^\u4e00-\u9fa5A-Za-z0-9]/g, '');
+        
         if (!name || name.length < MIN_LEN) continue;
         if (JUNK_LINE.test(name)) continue;
         if (SUFFIX_ONLY.test(name)) continue;
 
-        const stem = stripSuffix(name);
-        if (!stem || stem.length < 2) continue;
+        // 1. Apply static corrections first
+        for (const [wrong, correct] of Object.entries(OCR_CORRECTIONS)) {
+            if (name.includes(wrong)) {
+                name = name.replace(wrong, correct);
+            }
+        }
 
+        let stem = stripSuffix(name);
+        if (!stem || stem.length < 2) continue;
+        
+        // 2. Auto-correct to real name in mapping using advanced fuzzy match
+        stem = fuzzyMatchRealName(stem);
+        
+        // Strip suffix again in case fuzzy match returned full name (like '荔湾彩虹社区')
+        stem = stripSuffix(stem);
+
+        // 3. Final validation
         const hasDistrict = DISTRICT_PREFIXES.some(d => stem.startsWith(d));
-        const looksValid = stem.length >= 3 && /^[\u4e00-\u9fa5]/.test(stem);
-        if (!hasDistrict && !looksValid) continue;
+        const looksValid = stem.length >= 2 && /^[\u4e00-\u9fa5]/.test(stem);
+        
+        // Even if we couldn't match a district, if it's a known stem from the DB, keep it
+        const isKnownStem = Object.keys(MANAGER_MAP).some(k => stripSuffix(k).includes(stem));
+        
+        if (!hasDistrict && !looksValid && !isKnownStem) continue;
 
         if (!seen.has(stem)) {
             seen.add(stem);
