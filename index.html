@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -176,29 +176,68 @@
         /* ── TOGGLES ── */
         .toggle-row {
             display: flex; align-items: center; justify-content: space-between;
-            background: var(--blue-light); border: 1.5px solid rgba(111,168,232,.3);
-            border-radius: var(--radius); padding: 10px 13px; margin-top: 8px;
-            transition: background .2s, border-color .2s;
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(168, 200, 240, 0.4);
+            border-radius: var(--radius-lg); padding: 12px 16px; margin-top: 10px;
+            box-shadow: 0 4px 12px rgba(168, 200, 240, 0.05);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            position: relative;
+            overflow: hidden;
         }
-        .toggle-row:hover { background: #daeeff; border-color: rgba(111,168,232,.5); }
-        .toggle-row.orange-row { background: var(--orange-light); border-color: rgba(245,165,90,.35); }
-        .toggle-row.orange-row:hover { background: #fde8d0; border-color: rgba(245,165,90,.55); }
-        .toggle-lbl { font-size: 12px; font-weight: 700; color: var(--text2); }
-        .toggle-lbl small { display: block; font-size: 10px; color: var(--text3); font-weight: 600; margin-top: 2px; line-height: 1.5; }
-        .sw { position: relative; width: 38px; height: 21px; display: inline-block; flex-shrink: 0; }
+        .toggle-row::before {
+            content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
+            background: linear-gradient(to right, transparent, rgba(255,255,255,0.4), transparent);
+            transform: skewX(-20deg);
+            transition: all 0.5s;
+        }
+        .toggle-row:hover { 
+            background: rgba(255, 255, 255, 0.85); 
+            border-color: rgba(111,168,232,.6); 
+            box-shadow: 0 6px 16px rgba(168, 200, 240, 0.15);
+            transform: translateY(-2px);
+        }
+        .toggle-row:hover::before {
+            left: 200%;
+            transition: all 0.7s ease-in-out;
+        }
+        .toggle-row.orange-row { 
+            background: rgba(255, 250, 245, 0.6); 
+            border-color: rgba(245,165,90,.3); 
+            box-shadow: 0 4px 12px rgba(245, 165, 90, 0.05);
+        }
+        .toggle-row.orange-row:hover { 
+            background: rgba(255, 250, 245, 0.9); 
+            border-color: rgba(245,165,90,.6); 
+            box-shadow: 0 6px 16px rgba(245, 165, 90, 0.15);
+        }
+        .toggle-lbl { font-size: 12.5px; font-weight: 800; color: var(--text); z-index: 1; }
+        .toggle-lbl small { display: block; font-size: 10.5px; color: var(--text3); font-weight: 600; margin-top: 4px; line-height: 1.5; }
+        .sw { position: relative; width: 44px; height: 24px; display: inline-block; flex-shrink: 0; z-index: 1; }
         .sw input { opacity: 0; width: 0; height: 0; }
         .sw-s {
-            position: absolute; inset: 0; background: var(--border-med);
-            border-radius: 21px; cursor: pointer; transition: .22s;
+            position: absolute; inset: 0; background: rgba(200, 155, 195, 0.25);
+            border-radius: 24px; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+            border: 1px solid rgba(255,255,255,0.5);
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
         }
         .sw-s::before {
-            content: ''; position: absolute; width: 15px; height: 15px;
-            left: 3px; top: 3px; background: #fff; border-radius: 50%;
-            transition: .22s; box-shadow: 0 1px 4px rgba(0,0,0,.2);
+            content: ''; position: absolute; width: 18px; height: 18px;
+            left: 2px; top: 2px; background: #fff; border-radius: 50%;
+            transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1); 
+            box-shadow: 0 2px 5px rgba(0,0,0,.2);
         }
-        .sw input:checked + .sw-s { background: linear-gradient(135deg, var(--blue), var(--pink)); }
-        .sw input:checked + .sw-s::before { transform: translateX(17px); }
-        .sw.orange input:checked + .sw-s { background: linear-gradient(135deg, var(--orange), #f5c56a); }
+        .sw input:checked + .sw-s { 
+            background: linear-gradient(135deg, var(--blue-deep), var(--pink-deep)); 
+            border-color: transparent;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1), 0 0 8px var(--pink-glow);
+        }
+        .sw input:checked + .sw-s::before { transform: translateX(20px); }
+        .sw.orange input:checked + .sw-s { 
+            background: linear-gradient(135deg, var(--orange-deep), #f5c56a); 
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1), 0 0 8px rgba(245,165,90,0.3);
+        }
 
         /* ── SIDEBAR FOOTER ── */
         .sidebar-footer {
@@ -410,6 +449,119 @@
         .copy-combo-btn.done { border-color: rgba(91,191,160,.4); color: var(--green-deep); background: var(--green-light); }
         .copy-combo-btn:disabled { opacity: .45; cursor: not-allowed; }
 
+        /* ── OCR SUFFIX ROW ── */
+        .ocr-suffix-row {
+            display: flex; align-items: center; gap: 8px;
+            background: var(--purple-light); border: 1.5px solid rgba(201,179,232,.4);
+            border-radius: var(--radius); padding: 9px 13px; flex-shrink: 0;
+            flex-wrap: wrap;
+        }
+        .ocr-suffix-lbl {
+            font-size: 11px; font-weight: 800; color: var(--text2); white-space: nowrap;
+        }
+        .ocr-suffix-inp {
+            width: 110px;
+            min-width: 110px;
+            height: 32px;
+            padding: 0 10px;
+            background: var(--surface); border: 1.5px solid var(--border-med);
+            border-radius: 8px; color: var(--text);
+            font-size: 14px;
+            font-family: inherit; font-weight: 700;
+            outline: none; transition: border-color .2s, box-shadow .2s;
+            text-align: center;
+        }
+        .ocr-suffix-inp:focus { border-color: var(--purple); box-shadow: 0 0 0 3px rgba(201,179,232,.25); }
+        .ocr-suffix-hint {
+            font-size: 10px; color: var(--text3); font-weight: 600; white-space: nowrap;
+        }
+        .ocr-apply-btn {
+            display: flex; align-items: center; gap: 4px;
+            background: var(--purple-light); border: 1.5px solid rgba(201,179,232,.5);
+            border-radius: 8px; padding: 5px 13px; color: var(--purple);
+            font-size: 11px; font-weight: 800; cursor: pointer; font-family: inherit;
+            transition: all .18s; white-space: nowrap; height: 32px;
+        }
+        .ocr-apply-btn:hover { background: rgba(201,179,232,.3); border-color: var(--purple); }
+
+        /* ── OCR REVIEW MODAL ── */
+        .ocr-review-modal {
+            position: fixed; inset: 0; z-index: 350;
+            background: rgba(74,53,80,.88); backdrop-filter: blur(10px);
+            display: none; align-items: center; justify-content: center; padding: 20px;
+        }
+        .ocr-review-modal.open { display: flex; animation: fadeIn .2s ease; }
+        .ocr-review-panel {
+            background: var(--surface); border-radius: var(--radius-xl);
+            width: min(680px, 100%); max-height: 92vh;
+            display: flex; flex-direction: column;
+            box-shadow: 0 30px 80px rgba(74,53,80,.35);
+            animation: scaleIn .22s ease; overflow: hidden;
+        }
+        @keyframes scaleIn { from { transform: scale(.92); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .ocr-review-header {
+            padding: 16px 20px 12px; border-bottom: 1.5px solid var(--border);
+            display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
+            flex-shrink: 0;
+        }
+        .ocr-review-title { font-size: 15px; font-weight: 900; color: var(--text); }
+        .ocr-review-subtitle { font-size: 11px; color: var(--text2); margin-top: 3px; font-weight: 600; line-height: 1.5; }
+        .ocr-review-body { flex: 1; overflow: hidden; display: flex; gap: 0; }
+        .ocr-col {
+            flex: 1; display: flex; flex-direction: column; padding: 14px 16px; gap: 8px;
+            overflow: hidden;
+        }
+        .ocr-col + .ocr-col { border-left: 1.5px solid var(--border); }
+        .ocr-col-title {
+            font-size: 10px; font-weight: 900; letter-spacing: .8px; text-transform: uppercase;
+            color: var(--text3); flex-shrink: 0;
+        }
+        .ocr-raw-box {
+            flex: 1; overflow-y: auto; background: var(--bg2);
+            border: 1.5px solid var(--border); border-radius: var(--radius);
+            padding: 10px 12px; font-size: 12px; line-height: 2;
+            color: var(--text2); font-weight: 500; white-space: pre-wrap; word-break: break-all;
+            scrollbar-width: thin; scrollbar-color: var(--border-med) transparent;
+        }
+        .ocr-raw-box::-webkit-scrollbar { width: 3px; }
+        .ocr-raw-box::-webkit-scrollbar-thumb { background: var(--border-med); border-radius: 3px; }
+        .ocr-result-ta {
+            flex: 1; background: var(--surface2); border: 1.5px solid var(--border);
+            border-radius: var(--radius); padding: 10px 12px; font-size: 12px; line-height: 2;
+            font-family: inherit; color: var(--text); resize: none; outline: none;
+            font-weight: 600; overflow-y: auto;
+            transition: border-color .2s, box-shadow .2s;
+            scrollbar-width: thin; scrollbar-color: var(--border-med) transparent;
+        }
+        .ocr-result-ta:focus { border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-glow); }
+        .ocr-result-ta::-webkit-scrollbar { width: 3px; }
+        .ocr-result-ta::-webkit-scrollbar-thumb { background: var(--border-med); border-radius: 3px; }
+        .ocr-stats-row {
+            display: flex; gap: 6px; flex-wrap: wrap; flex-shrink: 0;
+        }
+        .ocr-stat {
+            font-size: 10px; font-weight: 800; padding: 2px 9px; border-radius: 6px;
+            border: 1px solid var(--border);
+        }
+        .ocr-stat.green { background: var(--green-light); color: var(--green-deep); border-color: rgba(94,191,160,.4); }
+        .ocr-stat.amber { background: #fef8e8; color: #b07a10; border-color: rgba(245,197,106,.5); }
+        .ocr-stat.red   { background: #fdecea; color: #c03530; border-color: rgba(244,149,138,.5); }
+        .ocr-review-footer {
+            padding: 12px 20px; border-top: 1.5px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between;
+            background: var(--bg); flex-shrink: 0; gap: 10px; flex-wrap: wrap;
+        }
+        .ocr-hint { font-size: 10.5px; color: var(--text3); font-weight: 600; line-height: 1.5; }
+        .ocr-hint b { color: var(--text2); }
+        .ocr-confirm-btn {
+            background: linear-gradient(135deg, var(--pink) 0%, var(--blue) 100%);
+            border: none; border-radius: var(--radius); color: #fff;
+            font-size: 12.5px; font-weight: 900; cursor: pointer; font-family: inherit;
+            padding: 9px 22px; transition: all .22s;
+            box-shadow: 0 4px 14px var(--pink-shadow);
+        }
+        .ocr-confirm-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(232,125,172,.4); }
+
         /* ── MODAL ── */
         .modal {
             position: fixed; inset: 0; z-index: 200;
@@ -422,7 +574,6 @@
             box-shadow: 0 24px 80px rgba(0,0,0,.6);
             animation: scaleIn .2s ease;
         }
-        @keyframes scaleIn { from { transform: scale(.92); opacity: 0; } to { transform: scale(1); opacity: 1; } }
         .modal-x {
             position: absolute; top: 16px; right: 16px; width: 34px; height: 34px;
             border-radius: 50%; background: rgba(255,255,255,.12);
@@ -487,7 +638,6 @@
             display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
             flex-shrink: 0;
         }
-        .mgr-title-block {}
         .mgr-title { font-size: 16px; font-weight: 900; color: var(--text); }
         .mgr-subtitle { font-size: 11px; color: var(--text2); margin-top: 3px; font-weight: 600; }
         .mgr-close {
@@ -595,7 +745,7 @@
             width: 26px; height: 26px; border-radius: 7px; background: transparent;
             border: 1.5px solid transparent; color: var(--text3); font-size: 14px;
             cursor: pointer; display: flex; align-items: center; justify-content: center;
-            transition: all .15s; font-family: inherit;
+            transition: all .15px; font-family: inherit;
         }
         .tbl-del:hover { background: #fdecea; border-color: rgba(244,149,138,.4); color: #d94030; }
         .district-tag {
@@ -646,15 +796,94 @@
             .card-body { border-left: none; border-top: 1.5px solid var(--border); }
             .main { padding: 14px; }
             .mgr-panel { max-height: 95vh; }
+            .ocr-review-body { flex-direction: column; }
+            .ocr-col + .ocr-col { border-left: none; border-top: 1.5px solid var(--border); }
+        }
+
+        /* ── COOL INTERACTIVE EFFECTS ── */
+        body {
+            background: linear-gradient(120deg, var(--bg), #f4f9fd, var(--bg), var(--bg));
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+        }
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .bg-bubbles {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; overflow: hidden;
+        }
+        .bubble {
+            position: absolute; border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, rgba(244,167,195,0.15), rgba(168,200,240,0.1));
+            box-shadow: 0 8px 32px rgba(244,167,195,0.1);
+            animation: float 10s infinite ease-in-out;
+        }
+        .bubble:nth-child(1) { width: 300px; height: 300px; left: -10%; top: -10%; animation-duration: 12s; }
+        .bubble:nth-child(2) { width: 400px; height: 400px; right: -10%; top: 40%; animation-duration: 15s; animation-delay: -2s; }
+        .bubble:nth-child(3) { width: 250px; height: 250px; left: 40%; bottom: -20%; animation-duration: 18s; animation-delay: -5s; }
+        @keyframes float {
+            0% { transform: translateY(0) scale(1) rotate(0deg); }
+            33% { transform: translateY(-30px) scale(1.05) rotate(5deg); }
+            66% { transform: translateY(20px) scale(0.95) rotate(-5deg); }
+            100% { transform: translateY(0) scale(1) rotate(0deg); }
+        }
+        .sidebar {
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        .ta-card, .fwd-card, .preview-frame {
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        .ta-card:hover, .preview-frame:hover {
+            box-shadow: 0 8px 24px rgba(220,150,195,0.15);
+            transform: translateY(-2px);
+        }
+        .gen-btn {
+            position: relative; overflow: hidden;
+        }
+        .gen-btn::after {
+            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%);
+            transform: rotate(30deg) translateY(-50%);
+            animation: buttonShine 3s infinite;
+        }
+        @keyframes buttonShine {
+            0% { transform: translateX(-100%) rotate(30deg); }
+            100% { transform: translateX(100%) rotate(30deg); }
+        }
+        .dropzone.drag-over {
+            animation: pulseGlow 1.5s infinite;
+        }
+        @keyframes pulseGlow {
+            0% { box-shadow: 0 0 0 0 rgba(244,167,195,0.4); }
+            70% { box-shadow: 0 0 0 15px rgba(244,167,195,0); }
+            100% { box-shadow: 0 0 0 0 rgba(244,167,195,0); }
+        }
+        .logo-gem {
+            transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .logo:hover .logo-gem {
+            transform: rotate(360deg) scale(1.15);
+        }
+        .btn-ghost:hover, .ocr-btn:hover, .zip-btn:hover {
+            transform: translateY(-1px) scale(1.02);
         }
     </style>
 </head>
 <body>
+<div class="bg-bubbles">
+    <div class="bubble"></div>
+    <div class="bubble"></div>
+    <div class="bubble"></div>
+</div>
 <header>
     <div class="logo">
         <div class="logo-gem">🌸</div>
         <div class="logo-name">营服 PPT 批量生成</div>
-        <div class="logo-ver">v3.1</div>
+        <div class="logo-ver">v3.5</div>
     </div>
     <div class="header-right">
         <div class="status-pill" id="ocrPill"><div class="dot" id="ocrDot"></div><span id="ocrLabel">OCR 待机</span></div>
@@ -688,7 +917,7 @@
             <div class="section">
                 <div class="sec-head"><div class="sec-num">2</div><div class="sec-title">导入营服名单</div></div>
                 <div class="ta-card">
-                    <textarea id="textList" class="the-ta" placeholder="每行一个营服名，例如：&#10;番禺洛浦营服&#10;天河元岗营服&#10;...&#10;或点击「OCR 识图」自动识别"></textarea>
+                    <textarea id="textList" class="the-ta" placeholder="每行一个营服名，例如：&#10;番禺洛浦社区&#10;天河元岗社区&#10;...&#10;或点击「OCR 识图」自动识别"></textarea>
                     <div class="ta-bar">
                         <span class="count-chip" id="lineCount">0 行</span>
                         <button class="ocr-btn" onclick="handleOCRClick()">📷 OCR 识图</button>
@@ -706,12 +935,12 @@
                     <span class="toggle-lbl">自动 @营服经理</span>
                     <label class="sw"><input type="checkbox" id="atToggle" checked><span class="sw-s"></span></label>
                 </div>
-                <div class="toggle-row orange-row">
+                <div class="toggle-row orange-row trae-browser-inspect-draggable">
                     <span class="toggle-lbl">
                         🗂️ 分局合并输出
                         <small>同一分局多营服合并为一张PPT<br>字号自动随数量缩小适配</small>
                     </span>
-                    <label class="sw orange"><input type="checkbox" id="mergeToggle"><span class="sw-s"></span></label>
+                    <label class="sw orange"><input type="checkbox" id="mergeToggle" checked><span class="sw-s"></span></label>
                 </div>
             </div>
         </div>
@@ -757,6 +986,54 @@
             <div class="card-list" id="cardList"></div>
         </div>
     </main>
+</div>
+
+<!-- OCR Review Modal -->
+<div class="ocr-review-modal" id="ocrReviewModal">
+    <div class="ocr-review-panel">
+        <div class="ocr-review-header">
+            <div>
+                <div class="ocr-review-title">📋 OCR 识别结果校对</div>
+                <div class="ocr-review-subtitle">左侧为原始识别文字，右侧为智能整理后的营服名称，请核对后点击「确认使用」</div>
+            </div>
+            <button class="mgr-close" onclick="closeOcrReview()">✕</button>
+        </div>
+        <div class="ocr-review-body">
+            <div class="ocr-col">
+                <div class="ocr-col-title">🔍 原始识别内容</div>
+                <div class="ocr-raw-box" id="ocrRawBox"></div>
+            </div>
+            <div class="ocr-col">
+                <div class="ocr-col-title" style="display:flex;align-items:center;justify-content:space-between;">
+                    <span>✅ 整理后名单（可直接编辑）</span>
+                </div>
+                <div class="ocr-stats-row" id="ocrStatsRow"></div>
+                <!-- ── SUFFIX CONTROL ROW ── -->
+                <div class="ocr-suffix-row">
+                    <span class="ocr-suffix-lbl">统一后缀</span>
+                    <input
+                        type="text"
+                        class="ocr-suffix-inp"
+                        id="ocrSuffixInp"
+                        value="社区"
+                        maxlength="8"
+                        placeholder="社区"
+                        title="所有名称将以此后缀结尾"
+                    >
+                    <button class="ocr-apply-btn" onclick="applyOcrSuffix()">⟳ 重新应用</button>
+                    <span class="ocr-suffix-hint">改后缀后点击重新应用</span>
+                </div>
+                <textarea class="ocr-result-ta" id="ocrResultTa" spellcheck="false"></textarea>
+            </div>
+        </div>
+        <div class="ocr-review-footer">
+            <div class="ocr-hint">每行一个营服名 · <b>可直接在右侧编辑</b>修正识别错误</div>
+            <div style="display:flex;gap:8px;align-items:center;">
+                <button class="btn-ghost" onclick="closeOcrReview()">取消</button>
+                <button class="ocr-confirm-btn" onclick="confirmOcrResult()">✓ 确认使用</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Manager Modal -->
@@ -898,45 +1175,103 @@ const DEFAULT_MANAGER_MAP = {
     "从化江埔河东南":"胡志刚","从化江埔河东北":"李慕菊"
 };
 
-// ── ACTIVE MAP (can be modified) ──
 let MANAGER_MAP = Object.assign({}, DEFAULT_MANAGER_MAP);
-// Pending edits (shown in modal, applied on save)
 let pendingMap = null;
 
-const DISTRICT_PREFIXES =["天河","番禺","白云","越秀","海珠","荔湾","黄埔","增城","花都","南沙","从化"];
+const DISTRICT_PREFIXES = ["天河","番禺","白云","越秀","海珠","荔湾","黄埔","增城","花都","南沙","从化"];
+
+// Known tail suffixes (all combinations we might encounter)
+const KNOWN_SUFFIXES = ["社区营服","营服","社区"];
+
+/**
+ * Strip any known suffix from the end of a name, returning the bare stem.
+ */
+function stripSuffix(name) {
+    const sorted = [...KNOWN_SUFFIXES].sort((a, b) => b.length - a.length);
+    for (const s of sorted) {
+        if (name.endsWith(s)) return name.slice(0, name.length - s.length);
+    }
+    return name;
+}
+
+/**
+ * Normalise a single name to the desired suffix.
+ */
+function normaliseSuffix(name, suffix) {
+    const stem = stripSuffix(name.trim());
+    if (!stem || stem.length < 2) return '';
+    return stem + suffix;
+}
 
 function getDistrict(name) {
-    const clean = name.replace(/营服$/, '');
+    const clean = stripSuffix(name);
     for (const d of DISTRICT_PREFIXES) { if (clean.startsWith(d)) return d; }
     return '其他';
 }
 
 function getManager(name) {
     if (MANAGER_MAP[name]) return MANAGER_MAP[name];
-    const s = name.replace(/营服$/, '');
+    const s = stripSuffix(name);
     if (MANAGER_MAP[s]) return MANAGER_MAP[s];
-    for (const k in MANAGER_MAP) if (name.includes(k)||k.includes(name)||s.includes(k)||k.includes(s)) return MANAGER_MAP[k];
+    for (const k in MANAGER_MAP) {
+        const ks = stripSuffix(k);
+        if (name.includes(k) || k.includes(name) || s.includes(ks) || ks.includes(s)) return MANAGER_MAP[k];
+    }
     return '';
 }
 
 function getShortName(fullName, district) {
-    let s = fullName.replace(/营服$/, '').replace(/社区$/, '');
+    let s = stripSuffix(fullName);
     if (s.startsWith(district)) s = s.slice(district.length);
     return s;
 }
 
+/**
+ * Build the PPT display text for merged cards.
+ *
+ * Rules:
+ * - 1 name  → return full name as-is
+ * - 2 names → single line: "海珠滨江西、海联社区"
+ * - 3+ names → ALWAYS split after the 2nd item:
+ *     Line 1: first 2 items joined with 、(no suffix)
+ *     Line 2: remaining items joined with 、(last item gets suffix)
+ *   e.g. 4 names: "海珠滨江西、海联\n新港西、江南西社区"
+ *   e.g. 3 names: "海珠滨江西、海联\n新港西社区"
+ *   e.g. 5 names: "海珠滨江西、海联\n新港西、江南西、XXX社区"
+ *
+ * District prefix is kept on the first short name only;
+ * subsequent names have the district prefix stripped.
+ */
 function buildMergedPPTText(names, district) {
     if (names.length === 1) return names[0];
+
+    // Build short label for each name
     const shorts = names.map((n, i) => {
-        const s = getShortName(n, district);
-        return i === 0 ? district + s : s;
+        const stem = stripSuffix(n);
+        if (i === 0) return stem; // keep district prefix on first item
+        return stem.startsWith(district) ? stem.slice(district.length) : stem;
     });
-    if (names.length === 2) return shorts[0] + '、' + shorts[1] + '营服';
-    const half = Math.ceil(shorts.length / 2);
-    const line1 = shorts.slice(0, half).join('、');
-    const line2Parts = shorts.slice(half);
-    line2Parts[line2Parts.length - 1] += '营服';
-    return line1 + '\n' + line2Parts.join('、');
+
+    // Determine the trailing suffix from the first name
+    const firstFull = names[0];
+    let trailSuffix = '';
+    const sortedSuffixes = [...KNOWN_SUFFIXES].sort((a, b) => b.length - a.length);
+    for (const s of sortedSuffixes) {
+        if (firstFull.endsWith(s)) { trailSuffix = s; break; }
+    }
+
+    // Build parts: only the last item gets the trailing suffix
+    const parts = shorts.map((s, i) => i === shorts.length - 1 ? s + trailSuffix : s);
+
+    // 2 items → single line
+    if (parts.length === 2) {
+        return parts.join('、');
+    }
+
+    // 3+ items → ALWAYS break after the 2nd item
+    const line1 = parts.slice(0, 2).join('、');
+    const line2 = parts.slice(2).join('、');
+    return line1 + '\n' + line2;
 }
 
 function calcMergedFontSize(count, baseFS) {
@@ -947,7 +1282,7 @@ function calcMergedFontSize(count, baseFS) {
 }
 
 function buildMergedBlessing(names, bTpl, useAt) {
-    const fullDisplayNames = names.map(n => n.replace(/营服$/, ''));
+    const fullDisplayNames = names.map(n => stripSuffix(n));
     let blessing = bTpl.replace(/XXX/g, fullDisplayNames.join('、'));
     if (useAt) {
         const atParts = names.map(n => { const m = getManager(n); return m ? `@${m}` : null; }).filter(Boolean);
@@ -958,7 +1293,8 @@ function buildMergedBlessing(names, bTpl, useAt) {
 
 // ── STATE ──
 let bgImg = null, pptW = 1280, pptH = 720, tbInfo = null;
-let genImgs =[], ocrWorker = null, ocrState = 'idle';
+let genImgs = [], ocrWorker = null, ocrState = 'idle';
+let _lastOcrStems = [];
 
 const canvas = document.getElementById('previewCanvas');
 const ctx = canvas.getContext('2d');
@@ -1034,23 +1370,150 @@ async function handleOCRClick() {
     $('ocrFileInput').click();
 }
 
+// ── OCR POST-PROCESSING ──
+function processOCRLines(rawText) {
+    const rawLines = rawText.split('\n')
+        .map(l => l.replace(/\s+/g, '').trim())
+        .filter(l => l.length > 0);
+
+    const CONTINUATION_STARTERS = /^(区营服|营服|社区营服|区$|社区$)/;
+    const SUFFIX_ONLY = /^[区社营服]+$/;
+
+    const merged = [];
+    let i = 0;
+    while (i < rawLines.length) {
+        const cur = rawLines[i];
+        const next = rawLines[i + 1] || '';
+        if (
+            next &&
+            !cur.endsWith('营服') && !cur.endsWith('社区') && !cur.endsWith('社区营服') &&
+            CONTINUATION_STARTERS.test(next) &&
+            cur.length <= 10
+        ) {
+            merged.push(cur + next);
+            i += 2;
+        } else {
+            merged.push(cur);
+            i += 1;
+        }
+    }
+
+    const JUNK_LINE = /^[\d\s\-_.,，。、|｜/\\]+$/;
+    const MIN_LEN = 3;
+    const seen = new Set();
+    const stems = [];
+
+    for (let name of merged) {
+        name = name.replace(/[^\u4e00-\u9fa5A-Za-z0-9]/g, '');
+        if (!name || name.length < MIN_LEN) continue;
+        if (JUNK_LINE.test(name)) continue;
+        if (SUFFIX_ONLY.test(name)) continue;
+
+        const stem = stripSuffix(name);
+        if (!stem || stem.length < 2) continue;
+
+        const hasDistrict = DISTRICT_PREFIXES.some(d => stem.startsWith(d));
+        const looksValid = stem.length >= 3 && /^[\u4e00-\u9fa5]/.test(stem);
+        if (!hasDistrict && !looksValid) continue;
+
+        if (!seen.has(stem)) {
+            seen.add(stem);
+            stems.push(stem);
+        }
+    }
+
+    return stems;
+}
+
+function applyOcrSuffix() {
+    const suffix = $('ocrSuffixInp').value.trim() || '社区';
+    if (!_lastOcrStems.length) return;
+    const lines = _lastOcrStems
+        .map(stem => normaliseSuffix(stem, suffix))
+        .filter(Boolean);
+    $('ocrResultTa').value = lines.join('\n');
+    updateOcrStats(lines);
+    toast(`后缀已统一为「${suffix}」，共 ${lines.length} 条`, 'success', 1800);
+}
+
+function updateOcrStats(lines) {
+    const validCount = lines.length;
+    const knownCount = lines.filter(n => DISTRICT_PREFIXES.some(d => n.startsWith(d))).length;
+    const unknownCount = validCount - knownCount;
+    const filtered = (_lastOcrStems._rawLineCount || 0) - validCount;
+
+    $('ocrStatsRow').innerHTML = `
+        <span class="ocr-stat green">✓ 识别 ${validCount} 条</span>
+        ${filtered > 0 ? `<span class="ocr-stat amber">过滤 ${filtered} 行噪声</span>` : ''}
+        ${unknownCount > 0 ? `<span class="ocr-stat red">⚠ ${unknownCount} 条待核实</span>` : ''}
+    `;
+}
+
 $('ocrFileInput').addEventListener('change', async e => {
     const file = e.target.files[0]; if (!file) return;
     loader(true, 'AI 识别中...');
     try {
         const du = await resizeImg(file);
         const ret = await ocrWorker.recognize(du);
-        const lines = ret.data.text.split('\n')
-            .map(l => l.replace(/\s+/g, '').trim())
-            .filter(l => l.length > 1)
-            .map(l => l.endsWith('营服') ? l : l + '营服');
-        $('textList').value = lines.join('\n');
-        updateCount();
-        if (lines.length) { renderPreview(lines[0]); toast(`识别到 ${lines.length} 个营服`, 'success'); }
-        else toast('未识别到内容，请手动输入', 'error');
-    } catch (err) { toast('OCR 识别失败: ' + err.message, 'error', 4000); }
-    finally { loader(false); e.target.value = ''; }
+        const rawText = ret.data.text;
+
+        const stems = processOCRLines(rawText);
+        const rawLineCount = rawText.split('\n').filter(l => l.trim()).length;
+        stems._rawLineCount = rawLineCount;
+        _lastOcrStems = stems;
+
+        const suffix = $('ocrSuffixInp').value.trim() || '社区';
+        const processedLines = stems.map(s => normaliseSuffix(s, suffix)).filter(Boolean);
+
+        loader(false);
+        showOcrReview(rawText, processedLines, rawLineCount);
+
+    } catch (err) { toast('OCR 识别失败: ' + err.message, 'error', 4000); loader(false); }
+    finally { e.target.value = ''; }
 });
+
+function showOcrReview(rawText, processedLines, rawLineCount) {
+    $('ocrRawBox').textContent = rawText;
+    $('ocrResultTa').value = processedLines.join('\n');
+
+    const validCount = processedLines.length;
+    const filtered = rawLineCount - validCount;
+    const knownCount = processedLines.filter(n => DISTRICT_PREFIXES.some(d => n.startsWith(d))).length;
+    const unknownCount = validCount - knownCount;
+
+    $('ocrStatsRow').innerHTML = `
+        <span class="ocr-stat green">✓ 识别 ${validCount} 条</span>
+        ${filtered > 0 ? `<span class="ocr-stat amber">过滤 ${filtered} 行噪声</span>` : ''}
+        ${unknownCount > 0 ? `<span class="ocr-stat red">⚠ ${unknownCount} 条待核实</span>` : ''}
+    `;
+
+    $('ocrReviewModal').classList.add('open');
+}
+
+function closeOcrReview() {
+    $('ocrReviewModal').classList.remove('open');
+}
+
+function confirmOcrResult() {
+    const lines = $('ocrResultTa').value
+        .split('\n')
+        .map(l => l.trim())
+        .filter(Boolean);
+
+    if (!lines.length) {
+        toast('没有有效的营服名称', 'error');
+        return;
+    }
+
+    const existing = $('textList').value.trim();
+    $('textList').value = existing ? existing + '\n' + lines.join('\n') : lines.join('\n');
+    updateCount();
+
+    if (lines.length && bgImg) renderPreview(lines[0]);
+
+    closeOcrReview();
+    toast(`已导入 ${lines.length} 个营服名称`, 'success');
+}
 
 function resizeImg(file) {
     return new Promise(r => {
@@ -1230,7 +1693,7 @@ function updateCount() {
 function updateGenBtn() { $('genBtn').disabled = !bgImg || !getLines().length; }
 
 function groupByDistrict(lines) {
-    const order =[], map = {};
+    const order = [], map = {};
     for (const name of lines) {
         const d = getDistrict(name);
         if (!map[d]) { map[d] = []; order.push(d); }
@@ -1247,7 +1710,7 @@ async function startGen() {
     const bTpl = $('blessingTpl').value || '恭喜XXX营服当日高套封闭[庆祝][庆祝][庆祝]';
     const useAt = $('atToggle').checked;
 
-    genImgs =[];
+    genImgs = [];
     $('resultsSection').style.display = 'block';
     $('gcHint').textContent = GROUP_SIZE;
     const cardList = $('cardList');
@@ -1276,9 +1739,9 @@ async function genNormal(lines, bTpl, useAt, GROUP_SIZE, cardList) {
         const name = lines[i];
         loaderStep(`渲染 ${i + 1}/${lines.length}：${name}`);
         const dataUrl = renderHiRes(name);
-        const clean = name.replace(/营服$/, '');
+        const clean = stripSuffix(name);
         let bl = bTpl.replace(/XXX/g, clean);
-        if (useAt) { const m = getManager(clean); if (m) bl += ` @${m}`; }
+        if (useAt) { const m = getManager(name); if (m) bl += ` @${m}`; }
         genImgs.push({ name: name + '.png', dataUrl, blessing: bl });
         if (i % GROUP_SIZE === 0) {
             groupIdx++;
@@ -1306,9 +1769,9 @@ async function genMerged(lines, bTpl, useAt, GROUP_SIZE, cardList) {
             const name = names[0];
             loaderStep(`渲染：${name}`);
             const dataUrl = renderHiRes(name);
-            const clean = name.replace(/营服$/, '');
+            const clean = stripSuffix(name);
             let bl = bTpl.replace(/XXX/g, clean);
-            if (useAt) { const m = getManager(clean); if (m) bl += ` @${m}`; }
+            if (useAt) { const m = getManager(name); if (m) bl += ` @${m}`; }
             genImgs.push({ name: name + '.png', dataUrl, blessing: bl });
             if (idx % GROUP_SIZE === 0) {
                 groupIdx++;
@@ -1353,7 +1816,7 @@ function appendCard(container, i, label, dataUrl, blessing, isMerged, mergedName
     const mergedBadge = isMerged && mergedNames
         ? `<span class="merged-badge">🗂️ 合并 ${mergedNames.length} 营服</span>` : '';
     const metaNames = isMerged && mergedNames
-        ? mergedNames.map(n => n.replace(/营服$/, '')).join('、') : '';
+        ? mergedNames.map(n => stripSuffix(n)).join('、') : '';
     const blessingHtml = esc(blessing).replace(/\n/g, '<br>');
 
     card.innerHTML = `
@@ -1561,15 +2024,17 @@ function openModal(id) {
     $('modalImg').src = src; $('modal').classList.add('open');
 }
 function closeModal() { $('modal').classList.remove('open'); $('modalImg').src = ''; }
-document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeModal(); closeMgrModal(); } });
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { closeModal(); closeMgrModal(); closeOcrReview(); }
+});
 $('textList').addEventListener('input', updateCount);
 
 // ══════════════════════════════════════════════════════
 // ── MANAGER MODAL LOGIC ──
 // ══════════════════════════════════════════════════════
 
-let mgrEditRows = []; //[{name, manager, isNew}]
-let mgrPendingImport = null; // parsed from file upload, not yet saved
+let mgrEditRows = [];
+let mgrPendingImport = null;
 
 function openMgrModal() {
     pendingMap = Object.assign({}, MANAGER_MAP);
@@ -1592,7 +2057,7 @@ function handleMgrOverlayClick(e) {
 
 function switchMgrTab(tab) {
     document.querySelectorAll('.mgr-tab').forEach((t, i) => {
-        const tabs =['upload', 'edit', 'export'];
+        const tabs = ['upload', 'edit', 'export'];
         t.classList.toggle('active', tabs[i] === tab);
     });
     ['upload', 'edit', 'export'].forEach(t => {
@@ -1608,7 +2073,6 @@ function updateMgrCounts() {
     $('editCntBadge').textContent = cnt + ' 条';
 }
 
-// ── EDIT TABLE ──
 function renderEditTable(filter = '') {
     const tbody = $('editTbody');
     tbody.innerHTML = '';
@@ -1635,7 +2099,7 @@ function renderEditTable(filter = '') {
 }
 
 function getDistrictFromName(name) {
-    const clean = name.replace(/营服$/, '');
+    const clean = stripSuffix(name);
     for (const d of DISTRICT_PREFIXES) { if (clean.startsWith(d)) return d; }
     return '';
 }
@@ -1657,7 +2121,6 @@ function addNewRow() {
     mgrEditRows.unshift({ name: '', manager: '', isNew: true });
     $('editSearch').value = '';
     renderEditTable('');
-    // Focus the first input
     setTimeout(() => {
         const firstInp = $('editTbody').querySelector('.tbl-inp');
         if (firstInp) firstInp.focus();
@@ -1697,7 +2160,6 @@ async function parseMgrFile(file) {
 
     mgrPendingImport = parsed;
 
-    // Show result
     const newKeys = entries.filter(([k]) => !pendingMap[k]).length;
     const updKeys = entries.filter(([k]) => pendingMap[k] && pendingMap[k] !== parsed[k]).length;
     const sameKeys = entries.length - newKeys - updKeys;
@@ -1719,7 +2181,6 @@ function parseCSVOrTXT(text) {
     for (const line of lines) {
         const trimmed = line.trim();
         if (!trimmed) continue;
-        // Try tab, comma, or Chinese comma as separator
         const parts = trimmed.split(/[\t,，]/);
         if (parts.length >= 2) {
             const name = parts[0].trim().replace(/\s+/g,'');
@@ -1731,12 +2192,10 @@ function parseCSVOrTXT(text) {
 }
 
 async function parseXLSX(file) {
-    // Minimal XLSX parsing using JSZip (xlsx is a zip)
     const buf = await file.arrayBuffer();
     const zip = await JSZip.loadAsync(buf);
 
-    // Try to find the shared strings
-    let sharedStrings =[];
+    let sharedStrings = [];
     const ssFile = zip.file('xl/sharedStrings.xml');
     if (ssFile) {
         const ssXml = await ssFile.async('string');
@@ -1748,7 +2207,6 @@ async function parseXLSX(file) {
         }
     }
 
-    // Find sheet1
     const sheetFile = zip.file('xl/worksheets/sheet1.xml');
     if (!sheetFile) throw new Error('找不到 sheet1，请确认是标准 XLSX 格式。');
     const sheetXml = await sheetFile.async('string');
@@ -1760,7 +2218,7 @@ async function parseXLSX(file) {
 
     for (const row of rows) {
         const cells = row.getElementsByTagName('c');
-        const vals =[];
+        const vals = [];
         for (const cell of cells) {
             const t = cell.getAttribute('t');
             const vEl = cell.getElementsByTagName('v')[0];
@@ -1775,10 +2233,8 @@ async function parseXLSX(file) {
         const name = (vals[0] || '').trim().replace(/\s+/g,'');
         const manager = (vals[1] || '').trim().replace(/\s+/g,'');
         if (!name || !manager) continue;
-        // Skip likely header rows
         if (firstRow && (name.includes('营服') === false && name.length > 4)) {
-            // Might be a header like "名称"/"姓名" — skip if it doesn't look like a store name
-            const looksLikeHeader =['名称','营服名','姓名','经理','名字'].some(h => name.includes(h) || manager.includes(h));
+            const looksLikeHeader = ['名称','营服名','姓名','经理','名字'].some(h => name.includes(h) || manager.includes(h));
             if (looksLikeHeader) { firstRow = false; continue; }
         }
         firstRow = false;
@@ -1787,15 +2243,12 @@ async function parseXLSX(file) {
     return result;
 }
 
-// ── SAVE / APPLY ──
 function saveMgrChanges() {
-    // Collect from edit rows
     const newMap = {};
     for (const row of mgrEditRows) {
         const n = row.name.trim(), m = row.manager.trim();
         if (n && m) newMap[n] = m;
     }
-    // Merge pending import if any
     if (mgrPendingImport) {
         Object.assign(newMap, mgrPendingImport);
     }
@@ -1804,7 +2257,6 @@ function saveMgrChanges() {
     toast(`名单已更新！当前共 ${Object.keys(MANAGER_MAP).length} 条记录`, 'success', 3000);
 }
 
-// ── EXPORT ──
 function exportCSV() {
     const lines = ['营服名称,经理姓名'];
     const sorted = Object.entries(MANAGER_MAP).sort((a,b) => a[0].localeCompare(b[0],'zh'));
@@ -1813,7 +2265,7 @@ function exportCSV() {
 }
 
 function exportTXT() {
-    const lines =[];
+    const lines = [];
     const sorted = Object.entries(MANAGER_MAP).sort((a,b) => a[0].localeCompare(b[0],'zh'));
     sorted.forEach(([n, m]) => lines.push(`${n}\t${m}`));
     downloadText(lines.join('\n'), '营服经理名单.txt', 'text/plain;charset=utf-8');
