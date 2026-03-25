@@ -1470,14 +1470,34 @@ async function loadOCR() {
     return new Promise(resolve => {
         const timeout = setTimeout(() => { setOCR('failed', 'OCR 超时'); resolve(false); }, 30000);
         const s = document.createElement('script');
-        s.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+        s.src = 'https://unpkg.com/tesseract.js@v4.0.3/dist/tesseract.min.js';
         s.onload = async () => {
             clearTimeout(timeout);
             try {
-                ocrWorker = await Tesseract.createWorker('chi_sim');
-                setOCR('ready', 'OCR 就绪');
-                resolve(true);
-            } catch (e) { setOCR('failed', 'OCR 失败'); resolve(false); }
+                // Try multiple times if first init fails
+                let retries = 3;
+                while (retries > 0) {
+                    try {
+                        ocrWorker = await Tesseract.createWorker({
+                            logger: m => console.log(m)
+                        });
+                        await ocrWorker.loadLanguage('chi_sim');
+                        await ocrWorker.initialize('chi_sim');
+                        setOCR('ready', 'OCR 就绪');
+                        resolve(true);
+                        return;
+                    } catch (err) {
+                        console.warn('OCR init failed, retries left:', retries - 1, err);
+                        retries--;
+                        if (retries === 0) throw err;
+                        await sleep(1000);
+                    }
+                }
+            } catch (e) { 
+                console.error(e);
+                setOCR('failed', 'OCR 失败'); 
+                resolve(false); 
+            }
         };
         s.onerror = () => { clearTimeout(timeout); setOCR('failed', 'OCR 失败'); resolve(false); };
         document.head.appendChild(s);
